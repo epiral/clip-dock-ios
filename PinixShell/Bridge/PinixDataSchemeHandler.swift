@@ -163,7 +163,8 @@ class PinixDataSchemeHandler: NSObject, WKURLSchemeHandler {
         let headers: [String: String] = [
             "Content-Type": mimeType,
             "Content-Length": "\(data.count)",
-            "Accept-Ranges": "bytes"
+            "Accept-Ranges": "bytes",
+            "Access-Control-Allow-Origin": "*"
         ]
         let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: headers)!
         urlSchemeTask.didReceive(response)
@@ -177,7 +178,8 @@ class PinixDataSchemeHandler: NSObject, WKURLSchemeHandler {
             "Content-Type": mimeType,
             "Content-Length": "\(data.count)",
             "Content-Range": "bytes \(range.lowerBound)-\(range.upperBound - 1)/\(totalLength)",
-            "Accept-Ranges": "bytes"
+            "Accept-Ranges": "bytes",
+            "Access-Control-Allow-Origin": "*"
         ]
         let response = HTTPURLResponse(url: url, statusCode: 206, httpVersion: "HTTP/1.1", headerFields: headers)!
         urlSchemeTask.didReceive(response)
