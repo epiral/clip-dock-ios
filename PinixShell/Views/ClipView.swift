@@ -47,7 +47,11 @@ private struct ClipWebView: UIViewRepresentable {
         webView.scrollView.backgroundColor = webView.backgroundColor
 
         // 加载 Clip 入口（clipId 使用 alias）
-        let entryURL = URL(string: "pinix-web://\(config.alias)/web/index.html")!
+        let safeAlias = config.alias.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? config.alias
+        guard let entryURL = URL(string: "pinix-web://\(safeAlias)/web/index.html") else {
+            print("[ClipView] 无效 URL，alias: \(config.alias)")
+            return webView
+        }
         webView.load(URLRequest(url: entryURL))
 
         return webView
