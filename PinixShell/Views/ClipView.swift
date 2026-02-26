@@ -9,9 +9,8 @@ struct ClipView: View {
 
     var body: some View {
         ClipWebView(config: config)
-            .edgesIgnoringSafeArea(.all)
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationTitle(config.alias)
+            .ignoresSafeArea()
+            .toolbar(.hidden, for: .navigationBar)
     }
 }
 
