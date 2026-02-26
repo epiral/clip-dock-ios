@@ -5,52 +5,50 @@ import SwiftUI
 import WebKit
 
 struct ClipView: View {
-    let clipId: String
-    let host: String
-    let token: String
+    let config: ClipConfig
 
     var body: some View {
-        ClipWebView(clipId: clipId, host: host, token: token)
+        ClipWebView(config: config)
             .edgesIgnoringSafeArea(.all)
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(config.alias)
     }
 }
 
 // MARK: - ClipWebView（UIViewRepresentable）
 
 private struct ClipWebView: UIViewRepresentable {
-    let clipId: String
-    let host: String
-    let token: String
+    let config: ClipConfig
 
     func makeCoordinator() -> Coordinator {
         Coordinator()
     }
 
     func makeUIView(context: Context) -> WKWebView {
-        let config = WKWebViewConfiguration()
+        let wkConfig = WKWebViewConfiguration()
 
         // 注册 pinix-web:// scheme handler（web 资源）
-        let webHandler = PinixWebSchemeHandler(host: host, token: token)
-        config.setURLSchemeHandler(webHandler, forURLScheme: "pinix-web")
+        let webHandler = PinixWebSchemeHandler(host: config.baseURL, token: config.token)
+        wkConfig.setURLSchemeHandler(webHandler, forURLScheme: "pinix-web")
 
         // 注册 pinix-data:// scheme handler（数据文件，支持 Range）
-        let dataHandler = PinixDataSchemeHandler(host: host, token: token)
-        config.setURLSchemeHandler(dataHandler, forURLScheme: "pinix-data")
+        let dataHandler = PinixDataSchemeHandler(host: config.baseURL, token: config.token)
+        wkConfig.setURLSchemeHandler(dataHandler, forURLScheme: "pinix-data")
 
         // 注册 JSBridge
-        let bridge = JSBridge(pinixHost: host, pinixToken: token)
-        JSBridge.register(to: config.userContentController, bridge: bridge)
+        let bridge = JSBridge(pinixHost: config.baseURL, pinixToken: config.token)
+        JSBridge.register(to: wkConfig.userContentController, bridge: bridge)
         context.coordinator.bridge = bridge
 
-        let webView = WKWebView(frame: .zero, configuration: config)
+        let webView = WKWebView(frame: .zero, configuration: wkConfig)
         webView.navigationDelegate = context.coordinator
         webView.isInspectable = true
         webView.isOpaque = false
         webView.backgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.18, alpha: 1)
         webView.scrollView.backgroundColor = webView.backgroundColor
 
-        // 加载 Clip 入口
-        let entryURL = URL(string: "pinix-web://\(clipId)/web/index.html")!
+        // 加载 Clip 入口（clipId 使用 alias）
+        let entryURL = URL(string: "pinix-web://\(config.alias)/web/index.html")!
         webView.load(URLRequest(url: entryURL))
 
         return webView
