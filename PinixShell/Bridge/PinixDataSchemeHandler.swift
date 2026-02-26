@@ -33,8 +33,8 @@ class PinixDataSchemeHandler: NSObject, WKURLSchemeHandler {
             return
         }
 
-        // 转为 workdir 相对路径：直接去掉开头 /（URL 已含 data/ 前缀）
-        let relativePath = String(path.dropFirst())
+        // 转为 workdir 相对路径：data/path/to/file
+        let relativePath = "data" + path
         let rangeHeader = urlSchemeTask.request.value(forHTTPHeaderField: "Range")
 
         Task {
