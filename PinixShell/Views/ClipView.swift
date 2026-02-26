@@ -45,9 +45,12 @@ private struct ClipWebView: UIViewRepresentable {
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = context.coordinator
         webView.isInspectable = true
+        webView.isOpaque = false
+        webView.backgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.18, alpha: 1)
+        webView.scrollView.backgroundColor = webView.backgroundColor
 
         // 加载 Clip 入口
-        let entryURL = URL(string: "pinix-web://\(clipId)/index.html")!
+        let entryURL = URL(string: "pinix-web://\(clipId)/web/index.html")!
         webView.load(URLRequest(url: entryURL))
 
         return webView

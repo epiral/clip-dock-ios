@@ -34,8 +34,8 @@ class PinixWebSchemeHandler: NSObject, WKURLSchemeHandler {
             return
         }
 
-        // 转为 workdir 相对路径：web/path/to/file
-        let relativePath = "web" + path
+        // 转为 workdir 相对路径：直接去掉开头 /
+        let relativePath = String(path.dropFirst())
 
         Task {
             do {
