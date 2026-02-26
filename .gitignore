@@ -1,0 +1,19 @@
+# Xcode
+*.xcodeproj/
+*.xcworkspace/
+xcuserdata/
+DerivedData/
+build/
+*.pbxproj
+
+# SPM
+.build/
+.swiftpm/
+.spm-clone/
+Packages/
+Package.resolved
+
+# macOS
+.DS_Store
+*.swp
+*~
