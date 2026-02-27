@@ -5,14 +5,13 @@ import SwiftUI
 
 struct ClipListView: View {
     @EnvironmentObject private var store: ClipsStore
-    @Binding var deepLinkFullscreen: Bool
     @State private var editingClip: ClipConfig?
     @State private var showAddSheet = false
 
     var body: some View {
         List {
             ForEach(store.clips) { clip in
-                NavigationLink(value: clip) {
+                NavigationLink(value: ClipDestination(config: clip, fullscreen: false)) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(clip.alias)
                             .font(.headline)
@@ -38,9 +37,8 @@ struct ClipListView: View {
             }
         }
         .navigationTitle("Clips")
-        .navigationDestination(for: ClipConfig.self) { clip in
-            ClipView(config: clip, initialFullscreen: deepLinkFullscreen)
-                .onAppear { deepLinkFullscreen = false }
+        .navigationDestination(for: ClipDestination.self) { dest in
+            ClipView(config: dest.config, initialFullscreen: dest.fullscreen)
         }
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {

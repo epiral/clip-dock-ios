@@ -7,12 +7,11 @@ import SwiftUI
 struct PinixShellApp: App {
     @StateObject private var clipsStore = ClipsStore()
     @State private var path = NavigationPath()
-    @State private var deepLinkFullscreen = false
 
     var body: some Scene {
         WindowGroup {
             NavigationStack(path: $path) {
-                ClipListView(deepLinkFullscreen: $deepLinkFullscreen)
+                ClipListView()
             }
             .environmentObject(clipsStore)
             .onOpenURL { url in
@@ -24,11 +23,11 @@ struct PinixShellApp: App {
                 else { return }
 
                 let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
-                deepLinkFullscreen = components?.queryItems?
+                let fullscreen = components?.queryItems?
                     .first(where: { $0.name == "fullscreen" })?.value == "1"
 
                 path = NavigationPath()
-                path.append(clip)
+                path.append(ClipDestination(config: clip, fullscreen: fullscreen))
             }
         }
     }

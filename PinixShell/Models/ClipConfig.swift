@@ -16,3 +16,10 @@ struct ClipConfig: Codable, Identifiable, Equatable, Hashable {
         case alias, host, port, token
     }
 }
+
+// MARK: - Navigation destination (carries per-navigation fullscreen flag)
+
+struct ClipDestination: Hashable {
+    let config: ClipConfig
+    let fullscreen: Bool
+}
