@@ -7,6 +7,7 @@ import SwiftUI
 struct PinixShellApp: App {
     @StateObject private var clipsStore = ClipsStore()
     @State private var path = NavigationPath()
+    @State private var fullscreenClip: ClipConfig?
 
     var body: some Scene {
         WindowGroup {
@@ -14,6 +15,9 @@ struct PinixShellApp: App {
                 ClipListView()
             }
             .environmentObject(clipsStore)
+            .fullScreenCover(item: $fullscreenClip) { clip in
+                ClipView(config: clip, initialFullscreen: true)
+            }
             .onOpenURL { url in
                 // pinix://clip/[alias]?fullscreen=1
                 guard url.scheme == "pinix",
@@ -27,7 +31,11 @@ struct PinixShellApp: App {
                     .first(where: { $0.name == "fullscreen" })?.value == "1"
 
                 path = NavigationPath()
-                path.append(ClipDestination(config: clip, fullscreen: fullscreen))
+                if fullscreen {
+                    fullscreenClip = clip
+                } else {
+                    path.append(ClipDestination(config: clip, fullscreen: false))
+                }
             }
         }
     }
