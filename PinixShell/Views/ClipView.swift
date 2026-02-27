@@ -7,21 +7,38 @@ import WebKit
 struct ClipView: View {
     let config: ClipConfig
     @State private var showShortcutGuide = false
+    @State private var isFullscreen = false
 
     var body: some View {
         ClipWebView(config: config)
+            .ignoresSafeArea(isFullscreen ? .all : [])
             .navigationTitle(config.alias)
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar(isFullscreen ? .hidden : .visible, for: .navigationBar, .bottomBar)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        UIPasteboard.general.string = "pinix://clip/\(config.alias)"
-                        showShortcutGuide = true
-                    } label: {
-                        Image(systemName: "plus.app")
+                if !isFullscreen {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                isFullscreen = true
+                            }
+                        } label: {
+                            Image(systemName: "arrow.up.left.and.arrow.down.right")
+                        }
+                    }
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button {
+                            UIPasteboard.general.string = "pinix://clip/\(config.alias)"
+                            showShortcutGuide = true
+                        } label: {
+                            Image(systemName: "plus.app")
+                        }
                     }
                 }
             }
+            .navigationBarHidden(isFullscreen)
+            .statusBarHidden(isFullscreen)
+            .persistentSystemOverlays(isFullscreen ? .hidden : .automatic)
             .alert("链接已复制", isPresented: $showShortcutGuide) {
                 Button("知道了", role: .cancel) {}
             } message: {
