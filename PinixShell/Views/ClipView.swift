@@ -18,6 +18,7 @@ struct ClipView: View {
 
     var body: some View {
         ClipWebView(config: config)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .ignoresSafeArea(isFullscreen ? .all : [])
             .navigationTitle(config.alias)
             .navigationBarTitleDisplayMode(.inline)
@@ -85,6 +86,9 @@ private struct ClipWebView: UIViewRepresentable {
         webView.isOpaque = false
         webView.backgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.18, alpha: 1)
         webView.scrollView.backgroundColor = webView.backgroundColor
+        webView.scrollView.contentInsetAdjustmentBehavior = .never
+        webView.scrollView.contentInset = .zero
+        webView.scrollView.scrollIndicatorInsets = .zero
 
         // 加载 Clip 入口（clipId 使用 alias）
         let safeAlias = config.alias.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? config.alias
