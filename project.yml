@@ -42,6 +42,11 @@ targets:
         INFOPLIST_KEY_NSMicrophoneUsageDescription: "Clip 需要访问麦克风以录制音频"
         INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "Clip 需要访问位置以获取当前坐标"
         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "Clip 需要访问相册以选择图片"
+        INFOPLIST_KEY_NSHealthShareUsageDescription: "Clip 需要读取健康数据以展示健康指标"
+    entitlements:
+      path: PinixShell/PinixShell.entitlements
+      properties:
+        com.apple.developer.healthkit: true
     dependencies:
       - package: Connect
         product: Connect

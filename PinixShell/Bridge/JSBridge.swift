@@ -23,6 +23,7 @@ final class JSBridge: NSObject, WKScriptMessageHandlerWithReply {
     private let iosSystem:      IOSSystemBridgeHandler
     private let iosLocation:    IOSLocationBridgeHandler
     private let iosMedia:       IOSMediaBridgeHandler
+    private let iosHealth:      IOSHealthBridgeHandler
 
     // MARK: - Init
 
@@ -31,6 +32,7 @@ final class JSBridge: NSObject, WKScriptMessageHandlerWithReply {
         self.iosSystem     = IOSSystemBridgeHandler()
         self.iosLocation   = IOSLocationBridgeHandler()
         self.iosMedia      = IOSMediaBridgeHandler()
+        self.iosHealth     = IOSHealthBridgeHandler()
         super.init()
     }
 
@@ -94,6 +96,8 @@ final class JSBridge: NSObject, WKScriptMessageHandlerWithReply {
             iosLocation.handle(action: action, body: body, replyHandler: replyHandler)
         } else if IOSMediaBridgeHandler.actions.contains(action) {
             iosMedia.handle(action: action, body: body, replyHandler: replyHandler)
+        } else if IOSHealthBridgeHandler.actions.contains(action) {
+            iosHealth.handle(action: action, body: body, replyHandler: replyHandler)
         } else {
             replyHandler(nil, "Unknown action: \(action)")
         }
