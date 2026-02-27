@@ -10,6 +10,7 @@ struct ClipView: View {
     @State private var showShortcutGuide = false
     @State private var isFullscreen: Bool
     @State private var safeAreaInsets: UIEdgeInsets = .zero
+    @State private var webViewReloader = WebViewReloader()
 
     init(config: ClipConfig, initialFullscreen: Bool = false) {
         self.config = config
@@ -19,7 +20,7 @@ struct ClipView: View {
 
     var body: some View {
         ZStack {
-            ClipWebView(config: config, safeAreaInsets: safeAreaInsets, isFullscreen: isFullscreen)
+            ClipWebView(config: config, safeAreaInsets: safeAreaInsets, isFullscreen: isFullscreen, reloader: webViewReloader)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             SafeAreaProbe { insets in
                 if safeAreaInsets != insets {
@@ -43,6 +44,14 @@ struct ClipView: View {
                         }
                     } label: {
                         Image(systemName: "arrow.up.left.and.arrow.down.right")
+                    }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        DiskCache.shared.clearWebCache(alias: config.alias)
+                        webViewReloader.reload()
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -129,10 +138,21 @@ private final class ClipWebViewContainer: UIView {
 
 // MARK: - ClipWebView（UIViewRepresentable）
 
+/// WebView 刷新桥接：ClipView 按钮 → ClipWebView Coordinator
+@Observable
+final class WebViewReloader {
+    fileprivate weak var webView: WKWebView?
+
+    func reload() {
+        webView?.reload()
+    }
+}
+
 private struct ClipWebView: UIViewRepresentable {
     let config: ClipConfig
     var safeAreaInsets: UIEdgeInsets = .zero
     var isFullscreen: Bool = false
+    var reloader: WebViewReloader
 
     func makeCoordinator() -> Coordinator {
         Coordinator()
@@ -141,12 +161,12 @@ private struct ClipWebView: UIViewRepresentable {
     func makeUIView(context: Context) -> ClipWebViewContainer {
         let wkConfig = WKWebViewConfiguration()
 
-        // 注册 pinix-web:// scheme handler（web 资源）
-        let webHandler = PinixWebSchemeHandler(host: config.baseURL, token: config.token)
+        // 注册 pinix-web:// scheme handler（web 资源，带磁盘缓存）
+        let webHandler = PinixWebSchemeHandler(host: config.baseURL, token: config.token, alias: config.alias)
         wkConfig.setURLSchemeHandler(webHandler, forURLScheme: "pinix-web")
 
-        // 注册 pinix-data:// scheme handler（数据文件，支持 Range）
-        let dataHandler = PinixDataSchemeHandler(host: config.baseURL, token: config.token)
+        // 注册 pinix-data:// scheme handler（数据文件，ETag 协商缓存，支持 Range）
+        let dataHandler = PinixDataSchemeHandler(host: config.baseURL, token: config.token, alias: config.alias)
         wkConfig.setURLSchemeHandler(dataHandler, forURLScheme: "pinix-data")
 
         // 注册 JSBridge
@@ -157,6 +177,7 @@ private struct ClipWebView: UIViewRepresentable {
         let webView = WKWebView(frame: .zero, configuration: wkConfig)
         webView.navigationDelegate = context.coordinator
         webView.isInspectable = true
+        reloader.webView = webView
         webView.isOpaque = false
         webView.backgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.18, alpha: 1)
         webView.scrollView.backgroundColor = webView.backgroundColor

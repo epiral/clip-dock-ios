@@ -21,118 +21,219 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
   typealias Version = _2
 }
 
-// ── Clip 管理 ──
-
 struct Pinix_V1_CreateClipRequest: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
   var name: String = String()
+
   var workdir: String = String()
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
+
   init() {}
 }
 
 struct Pinix_V1_CreateClipResponse: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
   var clipID: String = String()
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
+
   init() {}
 }
 
 struct Pinix_V1_ListClipsRequest: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
+
   init() {}
 }
 
 struct Pinix_V1_ListClipsResponse: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
   var clips: [Pinix_V1_Clip] = []
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
+
   init() {}
 }
 
 struct Pinix_V1_Clip: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
   var clipID: String = String()
+
   var name: String = String()
+
   var workdir: String = String()
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
+
   init() {}
 }
 
 struct Pinix_V1_DeleteClipRequest: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
   var clipID: String = String()
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
+
   init() {}
 }
 
 struct Pinix_V1_DeleteClipResponse: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
+
   init() {}
 }
 
-// ── Token 管理 ──
-
 struct Pinix_V1_GenerateTokenRequest: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
   var clipID: String = String()
+
   var label: String = String()
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
+
   init() {}
 }
 
 struct Pinix_V1_GenerateTokenResponse: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
   var token: String = String()
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
+
   init() {}
 }
 
 struct Pinix_V1_RevokeTokenRequest: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
   var token: String = String()
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
+
   init() {}
 }
 
 struct Pinix_V1_RevokeTokenResponse: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
+
   init() {}
 }
 
-// ── Invoke ──
-
 struct Pinix_V1_InvokeRequest: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
   var name: String = String()
+
   var args: [String] = []
+
   var stdin: String = String()
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
+
   init() {}
 }
 
 struct Pinix_V1_InvokeResponse: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
   var stdout: String = String()
+
   var stderr: String = String()
+
   var exitCode: Int32 = 0
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
+
   init() {}
 }
 
-// ── ReadFile ──
-
 struct Pinix_V1_ReadFileRequest: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
   /// 相对 workdir: "web/index.html", "data/voice.mp3"
   var path: String = String()
+
   /// 字节偏移，0 = 从头
   var offset: Int64 = 0
+
   /// 请求字节数，0 = 到末尾
   var length: Int64 = 0
+
+  /// 客户端持有的 ETag
+  var ifNoneMatch: String = String()
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
+
   init() {}
 }
 
 struct Pinix_V1_ReadFileChunk: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
   /// 本 chunk 数据
   var data: Data = Data()
+
   /// 本 chunk 在文件中的起始偏移
   var offset: Int64 = 0
+
   /// 每个 chunk 都携带（Go 服务端用 mime.TypeByExtension 推断）
   var mimeType: String = String()
+
   /// 文件总大小，每个 chunk 都携带
   var totalSize: Int64 = 0
+
+  /// 文件当前 ETag
+  var etag: String = String()
+
+  /// true = 内容未变，客户端用本地缓存
+  var notModified: Bool = false
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
+
   init() {}
 }
 
@@ -142,58 +243,65 @@ fileprivate let _protobuf_package = "pinix.v1"
 
 extension Pinix_V1_CreateClipRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".CreateClipRequest"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "name"),
-    2: .same(proto: "workdir"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}name\0\u{1}workdir\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeSingularStringField(value: &self.name)
-      case 2: try decoder.decodeSingularStringField(value: &self.workdir)
+      case 1: try { try decoder.decodeSingularStringField(value: &self.name) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.workdir) }()
       default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.name.isEmpty { try visitor.visitSingularStringField(value: self.name, fieldNumber: 1) }
-    if !self.workdir.isEmpty { try visitor.visitSingularStringField(value: self.workdir, fieldNumber: 2) }
+    if !self.name.isEmpty {
+      try visitor.visitSingularStringField(value: self.name, fieldNumber: 1)
+    }
+    if !self.workdir.isEmpty {
+      try visitor.visitSingularStringField(value: self.workdir, fieldNumber: 2)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: Pinix_V1_CreateClipRequest, rhs: Pinix_V1_CreateClipRequest) -> Bool {
-    if lhs.name != rhs.name { return false }
-    if lhs.workdir != rhs.workdir { return false }
-    if lhs.unknownFields != rhs.unknownFields { return false }
+    if lhs.name != rhs.name {return false}
+    if lhs.workdir != rhs.workdir {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
 extension Pinix_V1_CreateClipResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".CreateClipResponse"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "clip_id"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}clip_id\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeSingularStringField(value: &self.clipID)
+      case 1: try { try decoder.decodeSingularStringField(value: &self.clipID) }()
       default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.clipID.isEmpty { try visitor.visitSingularStringField(value: self.clipID, fieldNumber: 1) }
+    if !self.clipID.isEmpty {
+      try visitor.visitSingularStringField(value: self.clipID, fieldNumber: 1)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: Pinix_V1_CreateClipResponse, rhs: Pinix_V1_CreateClipResponse) -> Bool {
-    if lhs.clipID != rhs.clipID { return false }
-    if lhs.unknownFields != rhs.unknownFields { return false }
+    if lhs.clipID != rhs.clipID {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
@@ -203,6 +311,7 @@ extension Pinix_V1_ListClipsRequest: SwiftProtobuf.Message, SwiftProtobuf._Messa
   static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    // Load everything into unknown fields
     while try decoder.nextFieldNumber() != nil {}
   }
 
@@ -211,96 +320,107 @@ extension Pinix_V1_ListClipsRequest: SwiftProtobuf.Message, SwiftProtobuf._Messa
   }
 
   static func ==(lhs: Pinix_V1_ListClipsRequest, rhs: Pinix_V1_ListClipsRequest) -> Bool {
-    if lhs.unknownFields != rhs.unknownFields { return false }
+    if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
 extension Pinix_V1_ListClipsResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".ListClipsResponse"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "clips"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}clips\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeRepeatedMessageField(value: &self.clips)
+      case 1: try { try decoder.decodeRepeatedMessageField(value: &self.clips) }()
       default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.clips.isEmpty { try visitor.visitRepeatedMessageField(value: self.clips, fieldNumber: 1) }
+    if !self.clips.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.clips, fieldNumber: 1)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: Pinix_V1_ListClipsResponse, rhs: Pinix_V1_ListClipsResponse) -> Bool {
-    if lhs.clips != rhs.clips { return false }
-    if lhs.unknownFields != rhs.unknownFields { return false }
+    if lhs.clips != rhs.clips {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
 extension Pinix_V1_Clip: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".Clip"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "clip_id"),
-    2: .same(proto: "name"),
-    3: .same(proto: "workdir"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}clip_id\0\u{1}name\0\u{1}workdir\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeSingularStringField(value: &self.clipID)
-      case 2: try decoder.decodeSingularStringField(value: &self.name)
-      case 3: try decoder.decodeSingularStringField(value: &self.workdir)
+      case 1: try { try decoder.decodeSingularStringField(value: &self.clipID) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.name) }()
+      case 3: try { try decoder.decodeSingularStringField(value: &self.workdir) }()
       default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.clipID.isEmpty { try visitor.visitSingularStringField(value: self.clipID, fieldNumber: 1) }
-    if !self.name.isEmpty { try visitor.visitSingularStringField(value: self.name, fieldNumber: 2) }
-    if !self.workdir.isEmpty { try visitor.visitSingularStringField(value: self.workdir, fieldNumber: 3) }
+    if !self.clipID.isEmpty {
+      try visitor.visitSingularStringField(value: self.clipID, fieldNumber: 1)
+    }
+    if !self.name.isEmpty {
+      try visitor.visitSingularStringField(value: self.name, fieldNumber: 2)
+    }
+    if !self.workdir.isEmpty {
+      try visitor.visitSingularStringField(value: self.workdir, fieldNumber: 3)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: Pinix_V1_Clip, rhs: Pinix_V1_Clip) -> Bool {
-    if lhs.clipID != rhs.clipID { return false }
-    if lhs.name != rhs.name { return false }
-    if lhs.workdir != rhs.workdir { return false }
-    if lhs.unknownFields != rhs.unknownFields { return false }
+    if lhs.clipID != rhs.clipID {return false}
+    if lhs.name != rhs.name {return false}
+    if lhs.workdir != rhs.workdir {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
 extension Pinix_V1_DeleteClipRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".DeleteClipRequest"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "clip_id"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}clip_id\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeSingularStringField(value: &self.clipID)
+      case 1: try { try decoder.decodeSingularStringField(value: &self.clipID) }()
       default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.clipID.isEmpty { try visitor.visitSingularStringField(value: self.clipID, fieldNumber: 1) }
+    if !self.clipID.isEmpty {
+      try visitor.visitSingularStringField(value: self.clipID, fieldNumber: 1)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: Pinix_V1_DeleteClipRequest, rhs: Pinix_V1_DeleteClipRequest) -> Bool {
-    if lhs.clipID != rhs.clipID { return false }
-    if lhs.unknownFields != rhs.unknownFields { return false }
+    if lhs.clipID != rhs.clipID {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
@@ -310,6 +430,7 @@ extension Pinix_V1_DeleteClipResponse: SwiftProtobuf.Message, SwiftProtobuf._Mes
   static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    // Load everything into unknown fields
     while try decoder.nextFieldNumber() != nil {}
   }
 
@@ -318,92 +439,102 @@ extension Pinix_V1_DeleteClipResponse: SwiftProtobuf.Message, SwiftProtobuf._Mes
   }
 
   static func ==(lhs: Pinix_V1_DeleteClipResponse, rhs: Pinix_V1_DeleteClipResponse) -> Bool {
-    if lhs.unknownFields != rhs.unknownFields { return false }
+    if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
 extension Pinix_V1_GenerateTokenRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".GenerateTokenRequest"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "clip_id"),
-    2: .same(proto: "label"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}clip_id\0\u{1}label\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeSingularStringField(value: &self.clipID)
-      case 2: try decoder.decodeSingularStringField(value: &self.label)
+      case 1: try { try decoder.decodeSingularStringField(value: &self.clipID) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.label) }()
       default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.clipID.isEmpty { try visitor.visitSingularStringField(value: self.clipID, fieldNumber: 1) }
-    if !self.label.isEmpty { try visitor.visitSingularStringField(value: self.label, fieldNumber: 2) }
+    if !self.clipID.isEmpty {
+      try visitor.visitSingularStringField(value: self.clipID, fieldNumber: 1)
+    }
+    if !self.label.isEmpty {
+      try visitor.visitSingularStringField(value: self.label, fieldNumber: 2)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: Pinix_V1_GenerateTokenRequest, rhs: Pinix_V1_GenerateTokenRequest) -> Bool {
-    if lhs.clipID != rhs.clipID { return false }
-    if lhs.label != rhs.label { return false }
-    if lhs.unknownFields != rhs.unknownFields { return false }
+    if lhs.clipID != rhs.clipID {return false}
+    if lhs.label != rhs.label {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
 extension Pinix_V1_GenerateTokenResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".GenerateTokenResponse"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "token"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}token\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeSingularStringField(value: &self.token)
+      case 1: try { try decoder.decodeSingularStringField(value: &self.token) }()
       default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.token.isEmpty { try visitor.visitSingularStringField(value: self.token, fieldNumber: 1) }
+    if !self.token.isEmpty {
+      try visitor.visitSingularStringField(value: self.token, fieldNumber: 1)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: Pinix_V1_GenerateTokenResponse, rhs: Pinix_V1_GenerateTokenResponse) -> Bool {
-    if lhs.token != rhs.token { return false }
-    if lhs.unknownFields != rhs.unknownFields { return false }
+    if lhs.token != rhs.token {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
 extension Pinix_V1_RevokeTokenRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".RevokeTokenRequest"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "token"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}token\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeSingularStringField(value: &self.token)
+      case 1: try { try decoder.decodeSingularStringField(value: &self.token) }()
       default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.token.isEmpty { try visitor.visitSingularStringField(value: self.token, fieldNumber: 1) }
+    if !self.token.isEmpty {
+      try visitor.visitSingularStringField(value: self.token, fieldNumber: 1)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: Pinix_V1_RevokeTokenRequest, rhs: Pinix_V1_RevokeTokenRequest) -> Bool {
-    if lhs.token != rhs.token { return false }
-    if lhs.unknownFields != rhs.unknownFields { return false }
+    if lhs.token != rhs.token {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
@@ -413,6 +544,7 @@ extension Pinix_V1_RevokeTokenResponse: SwiftProtobuf.Message, SwiftProtobuf._Me
   static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    // Load everything into unknown fields
     while try decoder.nextFieldNumber() != nil {}
   }
 
@@ -421,151 +553,187 @@ extension Pinix_V1_RevokeTokenResponse: SwiftProtobuf.Message, SwiftProtobuf._Me
   }
 
   static func ==(lhs: Pinix_V1_RevokeTokenResponse, rhs: Pinix_V1_RevokeTokenResponse) -> Bool {
-    if lhs.unknownFields != rhs.unknownFields { return false }
+    if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
 extension Pinix_V1_InvokeRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".InvokeRequest"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "name"),
-    2: .same(proto: "args"),
-    3: .same(proto: "stdin"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}name\0\u{1}args\0\u{1}stdin\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeSingularStringField(value: &self.name)
-      case 2: try decoder.decodeRepeatedStringField(value: &self.args)
-      case 3: try decoder.decodeSingularStringField(value: &self.stdin)
+      case 1: try { try decoder.decodeSingularStringField(value: &self.name) }()
+      case 2: try { try decoder.decodeRepeatedStringField(value: &self.args) }()
+      case 3: try { try decoder.decodeSingularStringField(value: &self.stdin) }()
       default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.name.isEmpty { try visitor.visitSingularStringField(value: self.name, fieldNumber: 1) }
-    if !self.args.isEmpty { try visitor.visitRepeatedStringField(value: self.args, fieldNumber: 2) }
-    if !self.stdin.isEmpty { try visitor.visitSingularStringField(value: self.stdin, fieldNumber: 3) }
+    if !self.name.isEmpty {
+      try visitor.visitSingularStringField(value: self.name, fieldNumber: 1)
+    }
+    if !self.args.isEmpty {
+      try visitor.visitRepeatedStringField(value: self.args, fieldNumber: 2)
+    }
+    if !self.stdin.isEmpty {
+      try visitor.visitSingularStringField(value: self.stdin, fieldNumber: 3)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: Pinix_V1_InvokeRequest, rhs: Pinix_V1_InvokeRequest) -> Bool {
-    if lhs.name != rhs.name { return false }
-    if lhs.args != rhs.args { return false }
-    if lhs.stdin != rhs.stdin { return false }
-    if lhs.unknownFields != rhs.unknownFields { return false }
+    if lhs.name != rhs.name {return false}
+    if lhs.args != rhs.args {return false}
+    if lhs.stdin != rhs.stdin {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
 extension Pinix_V1_InvokeResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".InvokeResponse"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "stdout"),
-    2: .same(proto: "stderr"),
-    3: .standard(proto: "exit_code"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}stdout\0\u{1}stderr\0\u{3}exit_code\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeSingularStringField(value: &self.stdout)
-      case 2: try decoder.decodeSingularStringField(value: &self.stderr)
-      case 3: try decoder.decodeSingularInt32Field(value: &self.exitCode)
+      case 1: try { try decoder.decodeSingularStringField(value: &self.stdout) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.stderr) }()
+      case 3: try { try decoder.decodeSingularInt32Field(value: &self.exitCode) }()
       default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.stdout.isEmpty { try visitor.visitSingularStringField(value: self.stdout, fieldNumber: 1) }
-    if !self.stderr.isEmpty { try visitor.visitSingularStringField(value: self.stderr, fieldNumber: 2) }
-    if self.exitCode != 0 { try visitor.visitSingularInt32Field(value: self.exitCode, fieldNumber: 3) }
+    if !self.stdout.isEmpty {
+      try visitor.visitSingularStringField(value: self.stdout, fieldNumber: 1)
+    }
+    if !self.stderr.isEmpty {
+      try visitor.visitSingularStringField(value: self.stderr, fieldNumber: 2)
+    }
+    if self.exitCode != 0 {
+      try visitor.visitSingularInt32Field(value: self.exitCode, fieldNumber: 3)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: Pinix_V1_InvokeResponse, rhs: Pinix_V1_InvokeResponse) -> Bool {
-    if lhs.stdout != rhs.stdout { return false }
-    if lhs.stderr != rhs.stderr { return false }
-    if lhs.exitCode != rhs.exitCode { return false }
-    if lhs.unknownFields != rhs.unknownFields { return false }
+    if lhs.stdout != rhs.stdout {return false}
+    if lhs.stderr != rhs.stderr {return false}
+    if lhs.exitCode != rhs.exitCode {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
 extension Pinix_V1_ReadFileRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".ReadFileRequest"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "path"),
-    2: .same(proto: "offset"),
-    3: .same(proto: "length"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}path\0\u{1}offset\0\u{1}length\0\u{3}if_none_match\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeSingularStringField(value: &self.path)
-      case 2: try decoder.decodeSingularInt64Field(value: &self.offset)
-      case 3: try decoder.decodeSingularInt64Field(value: &self.length)
+      case 1: try { try decoder.decodeSingularStringField(value: &self.path) }()
+      case 2: try { try decoder.decodeSingularInt64Field(value: &self.offset) }()
+      case 3: try { try decoder.decodeSingularInt64Field(value: &self.length) }()
+      case 4: try { try decoder.decodeSingularStringField(value: &self.ifNoneMatch) }()
       default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.path.isEmpty { try visitor.visitSingularStringField(value: self.path, fieldNumber: 1) }
-    if self.offset != 0 { try visitor.visitSingularInt64Field(value: self.offset, fieldNumber: 2) }
-    if self.length != 0 { try visitor.visitSingularInt64Field(value: self.length, fieldNumber: 3) }
+    if !self.path.isEmpty {
+      try visitor.visitSingularStringField(value: self.path, fieldNumber: 1)
+    }
+    if self.offset != 0 {
+      try visitor.visitSingularInt64Field(value: self.offset, fieldNumber: 2)
+    }
+    if self.length != 0 {
+      try visitor.visitSingularInt64Field(value: self.length, fieldNumber: 3)
+    }
+    if !self.ifNoneMatch.isEmpty {
+      try visitor.visitSingularStringField(value: self.ifNoneMatch, fieldNumber: 4)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: Pinix_V1_ReadFileRequest, rhs: Pinix_V1_ReadFileRequest) -> Bool {
-    if lhs.path != rhs.path { return false }
-    if lhs.offset != rhs.offset { return false }
-    if lhs.length != rhs.length { return false }
-    if lhs.unknownFields != rhs.unknownFields { return false }
+    if lhs.path != rhs.path {return false}
+    if lhs.offset != rhs.offset {return false}
+    if lhs.length != rhs.length {return false}
+    if lhs.ifNoneMatch != rhs.ifNoneMatch {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
 extension Pinix_V1_ReadFileChunk: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".ReadFileChunk"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "data"),
-    2: .same(proto: "offset"),
-    3: .standard(proto: "mime_type"),
-    4: .standard(proto: "total_size"),
-  ]
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}data\0\u{1}offset\0\u{3}mime_type\0\u{3}total_size\0\u{1}etag\0\u{3}not_modified\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeSingularBytesField(value: &self.data)
-      case 2: try decoder.decodeSingularInt64Field(value: &self.offset)
-      case 3: try decoder.decodeSingularStringField(value: &self.mimeType)
-      case 4: try decoder.decodeSingularInt64Field(value: &self.totalSize)
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.data) }()
+      case 2: try { try decoder.decodeSingularInt64Field(value: &self.offset) }()
+      case 3: try { try decoder.decodeSingularStringField(value: &self.mimeType) }()
+      case 4: try { try decoder.decodeSingularInt64Field(value: &self.totalSize) }()
+      case 5: try { try decoder.decodeSingularStringField(value: &self.etag) }()
+      case 6: try { try decoder.decodeSingularBoolField(value: &self.notModified) }()
       default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.data.isEmpty { try visitor.visitSingularBytesField(value: self.data, fieldNumber: 1) }
-    if self.offset != 0 { try visitor.visitSingularInt64Field(value: self.offset, fieldNumber: 2) }
-    if !self.mimeType.isEmpty { try visitor.visitSingularStringField(value: self.mimeType, fieldNumber: 3) }
-    if self.totalSize != 0 { try visitor.visitSingularInt64Field(value: self.totalSize, fieldNumber: 4) }
+    if !self.data.isEmpty {
+      try visitor.visitSingularBytesField(value: self.data, fieldNumber: 1)
+    }
+    if self.offset != 0 {
+      try visitor.visitSingularInt64Field(value: self.offset, fieldNumber: 2)
+    }
+    if !self.mimeType.isEmpty {
+      try visitor.visitSingularStringField(value: self.mimeType, fieldNumber: 3)
+    }
+    if self.totalSize != 0 {
+      try visitor.visitSingularInt64Field(value: self.totalSize, fieldNumber: 4)
+    }
+    if !self.etag.isEmpty {
+      try visitor.visitSingularStringField(value: self.etag, fieldNumber: 5)
+    }
+    if self.notModified != false {
+      try visitor.visitSingularBoolField(value: self.notModified, fieldNumber: 6)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: Pinix_V1_ReadFileChunk, rhs: Pinix_V1_ReadFileChunk) -> Bool {
-    if lhs.data != rhs.data { return false }
-    if lhs.offset != rhs.offset { return false }
-    if lhs.mimeType != rhs.mimeType { return false }
-    if lhs.totalSize != rhs.totalSize { return false }
-    if lhs.unknownFields != rhs.unknownFields { return false }
+    if lhs.data != rhs.data {return false}
+    if lhs.offset != rhs.offset {return false}
+    if lhs.mimeType != rhs.mimeType {return false}
+    if lhs.totalSize != rhs.totalSize {return false}
+    if lhs.etag != rhs.etag {return false}
+    if lhs.notModified != rhs.notModified {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }

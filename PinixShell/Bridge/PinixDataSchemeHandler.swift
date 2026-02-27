@@ -11,11 +11,13 @@ class PinixDataSchemeHandler: NSObject, WKURLSchemeHandler {
 
     private let host: String
     private let token: String
+    private let alias: String
     private var stoppedTasks = Set<ObjectIdentifier>()
 
-    init(host: String, token: String) {
+    init(host: String, token: String, alias: String) {
         self.host = host
         self.token = token
+        self.alias = alias
         super.init()
     }
 
@@ -40,22 +42,43 @@ class PinixDataSchemeHandler: NSObject, WKURLSchemeHandler {
         Task {
             do {
                 if let rangeHeader {
-                    // Range 请求：解析 Range，通过 ReadFile offset/length 精确读取
+                    // Range 请求：不走缓存，维持原逻辑
                     try await self.handleRangeRequest(
                         urlSchemeTask: urlSchemeTask, taskId: taskId,
                         url: requestURL, path: relativePath, rangeHeader: rangeHeader
                     )
                 } else {
-                    // 全量读取
-                    let fileData = try await self.readFile(path: relativePath, offset: 0, length: 0)
+                    // 全量读取 — ETag 协商缓存
+                    let cached = DiskCache.shared.readDataCache(alias: self.alias, path: relativePath)
+                    let cachedEtag = cached?.etag ?? ""
+
+                    let fileData = try await self.readFile(
+                        path: relativePath, offset: 0, length: 0, ifNoneMatch: cachedEtag
+                    )
 
                     guard !self.stoppedTasks.contains(taskId) else { return }
 
-                    self.respond200(
-                        urlSchemeTask: urlSchemeTask, url: requestURL,
-                        data: fileData.data, mimeType: fileData.mimeType,
-                        totalSize: Int(fileData.totalSize)
-                    )
+                    if fileData.notModified, let cached {
+                        // 服务端确认未变 → 用本地缓存返回
+                        self.respond200(
+                            urlSchemeTask: urlSchemeTask, url: requestURL,
+                            data: cached.data, mimeType: cached.mimeType,
+                            totalSize: Int(cached.data.count)
+                        )
+                    } else {
+                        // 新数据 → 写缓存后返回
+                        if !fileData.etag.isEmpty {
+                            DiskCache.shared.writeDataCache(
+                                alias: self.alias, path: relativePath,
+                                data: fileData.data, etag: fileData.etag, mimeType: fileData.mimeType
+                            )
+                        }
+                        self.respond200(
+                            urlSchemeTask: urlSchemeTask, url: requestURL,
+                            data: fileData.data, mimeType: fileData.mimeType,
+                            totalSize: Int(fileData.totalSize)
+                        )
+                    }
                 }
             } catch {
                 guard !self.stoppedTasks.contains(taskId) else { return }
@@ -106,16 +129,21 @@ class PinixDataSchemeHandler: NSObject, WKURLSchemeHandler {
         let data: Data
         let mimeType: String
         let totalSize: Int64
+        let etag: String
+        let notModified: Bool
     }
 
     /// 通过 ClipService.ReadFile（server streaming）读取文件
-    private func readFile(path: String, offset: Int64, length: Int64) async throws -> FileResult {
+    private func readFile(path: String, offset: Int64, length: Int64, ifNoneMatch: String = "") async throws -> FileResult {
         let client = makeClient()
 
         var request = Pinix_V1_ReadFileRequest()
         request.path = path
         request.offset = offset
         request.length = length
+        if !ifNoneMatch.isEmpty {
+            request.ifNoneMatch = ifNoneMatch
+        }
 
         var headers: Connect.Headers = [:]
         if !token.isEmpty {
@@ -128,6 +156,8 @@ class PinixDataSchemeHandler: NSObject, WKURLSchemeHandler {
         var chunks: [(offset: Int64, data: Data)] = []
         var mimeType = "application/octet-stream"
         var totalSize: Int64 = 0
+        var etag = ""
+        var notModified = false
         var streamError: Error?
 
         for await result in stream.results() {
@@ -135,9 +165,16 @@ class PinixDataSchemeHandler: NSObject, WKURLSchemeHandler {
             case .headers:
                 break
             case .message(let chunk):
-                chunks.append((offset: chunk.offset, data: chunk.data))
-                if !chunk.mimeType.isEmpty { mimeType = chunk.mimeType }
-                if chunk.totalSize > 0 { totalSize = chunk.totalSize }
+                if chunk.notModified {
+                    notModified = true
+                    if !chunk.etag.isEmpty { etag = chunk.etag }
+                    if !chunk.mimeType.isEmpty { mimeType = chunk.mimeType }
+                } else {
+                    chunks.append((offset: chunk.offset, data: chunk.data))
+                    if !chunk.mimeType.isEmpty { mimeType = chunk.mimeType }
+                    if chunk.totalSize > 0 { totalSize = chunk.totalSize }
+                    if !chunk.etag.isEmpty { etag = chunk.etag }
+                }
             case .complete(_, let error, _):
                 if let error { streamError = error }
             }
@@ -147,6 +184,10 @@ class PinixDataSchemeHandler: NSObject, WKURLSchemeHandler {
             throw makeError("ReadFile 失败: \(streamError)")
         }
 
+        if notModified {
+            return FileResult(data: Data(), mimeType: mimeType, totalSize: 0, etag: etag, notModified: true)
+        }
+
         // 按 offset 排序后拼合
         chunks.sort { $0.offset < $1.offset }
         var assembled = Data()
@@ -154,7 +195,7 @@ class PinixDataSchemeHandler: NSObject, WKURLSchemeHandler {
             assembled.append(chunk.data)
         }
 
-        return FileResult(data: assembled, mimeType: mimeType, totalSize: totalSize)
+        return FileResult(data: assembled, mimeType: mimeType, totalSize: totalSize, etag: etag, notModified: false)
     }
 
     // MARK: - 响应辅助

@@ -11,11 +11,13 @@ class PinixWebSchemeHandler: NSObject, WKURLSchemeHandler {
 
     private let host: String
     private let token: String
+    private let alias: String
     private var stoppedTasks = Set<ObjectIdentifier>()
 
-    init(host: String, token: String) {
+    init(host: String, token: String, alias: String) {
         self.host = host
         self.token = token
+        self.alias = alias
         super.init()
     }
 
@@ -39,9 +41,32 @@ class PinixWebSchemeHandler: NSObject, WKURLSchemeHandler {
 
         Task {
             do {
+                // 1. 先检查磁盘缓存
+                if let cached = DiskCache.shared.readWebCache(alias: self.alias, path: relativePath) {
+                    guard !self.stoppedTasks.contains(taskId) else { return }
+                    let mimeType = Self.guessMIMEType(for: relativePath)
+                    let headers: [String: String] = [
+                        "Content-Type": mimeType,
+                        "Content-Length": "\(cached.count)",
+                        "Access-Control-Allow-Origin": "*"
+                    ]
+                    let response = HTTPURLResponse(
+                        url: requestURL, statusCode: 200,
+                        httpVersion: "HTTP/1.1", headerFields: headers
+                    )!
+                    urlSchemeTask.didReceive(response)
+                    urlSchemeTask.didReceive(cached)
+                    urlSchemeTask.didFinish()
+                    return
+                }
+
+                // 2. 缓存未命中 → 调 RPC
                 let fileData = try await self.readFile(path: relativePath)
 
                 guard !self.stoppedTasks.contains(taskId) else { return }
+
+                // 3. 写入缓存
+                DiskCache.shared.writeWebCache(alias: self.alias, path: relativePath, data: fileData.data)
 
                 let headers: [String: String] = [
                     "Content-Type": fileData.mimeType,
@@ -139,6 +164,25 @@ class PinixWebSchemeHandler: NSObject, WKURLSchemeHandler {
             )
         )
         return Pinix_V1_ClipServiceClient(client: protocolClient)
+    }
+
+    // MARK: - MIME 推断（缓存命中时用）
+
+    private static let mimeMap: [String: String] = [
+        "html": "text/html", "htm": "text/html",
+        "css": "text/css", "js": "application/javascript",
+        "json": "application/json", "png": "image/png",
+        "jpg": "image/jpeg", "jpeg": "image/jpeg",
+        "gif": "image/gif", "svg": "image/svg+xml",
+        "woff": "font/woff", "woff2": "font/woff2",
+        "ttf": "font/ttf", "ico": "image/x-icon",
+        "webp": "image/webp", "mp3": "audio/mpeg",
+        "mp4": "video/mp4", "wasm": "application/wasm",
+    ]
+
+    private static func guessMIMEType(for path: String) -> String {
+        let ext = (path as NSString).pathExtension.lowercased()
+        return mimeMap[ext] ?? "application/octet-stream"
     }
 
     // MARK: - 错误辅助

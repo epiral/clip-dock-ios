@@ -9,10 +9,11 @@ import Connect
 import Foundation
 import SwiftProtobuf
 
-// ─── PinixService ──────────────────────────────────────────────
-// Super Agent Token 持有者使用，拥有整机权限
+/// ─── PinixService ──────────────────────────────────────────────
+/// Super Agent Token 持有者使用，拥有整机权限
 internal protocol Pinix_V1_PinixServiceClientInterface: Sendable {
 
+    /// 管理 Clip
     @available(iOS 13, *)
     func `createClip`(request: Pinix_V1_CreateClipRequest, headers: Connect.Headers) async -> ResponseMessage<Pinix_V1_CreateClipResponse>
 
@@ -22,6 +23,7 @@ internal protocol Pinix_V1_PinixServiceClientInterface: Sendable {
     @available(iOS 13, *)
     func `deleteClip`(request: Pinix_V1_DeleteClipRequest, headers: Connect.Headers) async -> ResponseMessage<Pinix_V1_DeleteClipResponse>
 
+    /// 管理 Token
     @available(iOS 13, *)
     func `generateToken`(request: Pinix_V1_GenerateTokenRequest, headers: Connect.Headers) async -> ResponseMessage<Pinix_V1_GenerateTokenResponse>
 
@@ -29,6 +31,7 @@ internal protocol Pinix_V1_PinixServiceClientInterface: Sendable {
     func `revokeToken`(request: Pinix_V1_RevokeTokenRequest, headers: Connect.Headers) async -> ResponseMessage<Pinix_V1_RevokeTokenResponse>
 }
 
+/// Concrete implementation of `Pinix_V1_PinixServiceClientInterface`.
 internal final class Pinix_V1_PinixServiceClient: Pinix_V1_PinixServiceClientInterface, Sendable {
     private let client: Connect.ProtocolClientInterface
 
@@ -72,8 +75,8 @@ internal final class Pinix_V1_PinixServiceClient: Pinix_V1_PinixServiceClientInt
     }
 }
 
-// ─── ClipService ───────────────────────────────────────────────
-// Clip Token 持有者使用，权限绑定特定 workdir
+/// ─── ClipService ───────────────────────────────────────────────
+/// Clip Token 持有者使用，权限绑定特定 workdir
 internal protocol Pinix_V1_ClipServiceClientInterface: Sendable {
 
     /// 执行 commands/ 下的可执行文件
@@ -82,9 +85,10 @@ internal protocol Pinix_V1_ClipServiceClientInterface: Sendable {
 
     /// 流式读取 workdir 下的文件
     @available(iOS 13, *)
-    func `readFile`(headers: Connect.Headers) -> any ServerOnlyAsyncStreamInterface<Pinix_V1_ReadFileRequest, Pinix_V1_ReadFileChunk>
+    func `readFile`(headers: Connect.Headers) -> any Connect.ServerOnlyAsyncStreamInterface<Pinix_V1_ReadFileRequest, Pinix_V1_ReadFileChunk>
 }
 
+/// Concrete implementation of `Pinix_V1_ClipServiceClientInterface`.
 internal final class Pinix_V1_ClipServiceClient: Pinix_V1_ClipServiceClientInterface, Sendable {
     private let client: Connect.ProtocolClientInterface
 
@@ -98,7 +102,7 @@ internal final class Pinix_V1_ClipServiceClient: Pinix_V1_ClipServiceClientInter
     }
 
     @available(iOS 13, *)
-    internal func `readFile`(headers: Connect.Headers = [:]) -> any ServerOnlyAsyncStreamInterface<Pinix_V1_ReadFileRequest, Pinix_V1_ReadFileChunk> {
+    internal func `readFile`(headers: Connect.Headers = [:]) -> any Connect.ServerOnlyAsyncStreamInterface<Pinix_V1_ReadFileRequest, Pinix_V1_ReadFileChunk> {
         return self.client.serverOnlyStream(path: "/pinix.v1.ClipService/ReadFile", headers: headers)
     }
 
