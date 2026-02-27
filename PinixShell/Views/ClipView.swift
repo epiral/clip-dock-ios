@@ -11,6 +11,58 @@ struct ClipView: View {
         ClipWebView(config: config)
             .navigationTitle(config.alias)
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        addToHomeScreen(clip: config)
+                    } label: {
+                        Image(systemName: "plus.app")
+                    }
+                }
+            }
+    }
+
+    private func addToHomeScreen(clip: ClipConfig) {
+        let shortcutData = generateShortcutFile(alias: clip.alias, displayName: clip.alias)
+        let tempURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("\(clip.alias).shortcut")
+        try? shortcutData.write(to: tempURL)
+
+        let activityVC = UIActivityViewController(activityItems: [tempURL], applicationActivities: nil)
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let rootVC = windowScene.windows.first?.rootViewController {
+            // Walk to the topmost presented controller
+            var topVC = rootVC
+            while let presented = topVC.presentedViewController {
+                topVC = presented
+            }
+            activityVC.popoverPresentationController?.barButtonItem = nil
+            topVC.present(activityVC, animated: true)
+        }
+    }
+
+    private func generateShortcutFile(alias: String, displayName: String) -> Data {
+        let dict: [String: Any] = [
+            "WFWorkflowMinimumClientVersionString": "900",
+            "WFWorkflowMinimumClientVersion": 900,
+            "WFWorkflowClientVersion": "2.3",
+            "WFWorkflowIcon": [
+                "WFWorkflowIconStartColor": 431817727,
+                "WFWorkflowIconGlyphNumber": 59511
+            ],
+            "WFWorkflowInputContentItemClasses": [] as [String],
+            "WFWorkflowActions": [
+                [
+                    "WFWorkflowActionIdentifier": "is.workflow.actions.openurl",
+                    "WFWorkflowActionParameters": [
+                        "WFURLActionURL": "pinix://clip/\(alias)"
+                    ]
+                ]
+            ],
+            "WFWorkflowName": displayName,
+            "WFWorkflowHasShortcutInputVariables": false
+        ]
+        return try! PropertyListSerialization.data(fromPropertyList: dict, format: .xml, options: 0)
     }
 }
 

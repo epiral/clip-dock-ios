@@ -21,13 +21,18 @@ struct ClipListView: View {
                     }
                     .padding(.vertical, 4)
                 }
-                .contextMenu {
-                    Button("编辑") { editingClip = clip }
-                }
-            }
-            .onDelete { indexSet in
-                for idx in indexSet {
-                    store.deleteClip(store.clips[idx])
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    Button(role: .destructive) {
+                        store.deleteClip(clip)
+                    } label: {
+                        Label("删除", systemImage: "trash")
+                    }
+                    Button {
+                        editingClip = clip
+                    } label: {
+                        Label("编辑", systemImage: "pencil")
+                    }
+                    .tint(.blue)
                 }
             }
         }
