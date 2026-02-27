@@ -5,6 +5,7 @@ import SwiftUI
 
 struct ClipListView: View {
     @EnvironmentObject private var store: ClipsStore
+    @Binding var deepLinkFullscreen: Bool
     @State private var editingClip: ClipConfig?
     @State private var showAddSheet = false
 
@@ -38,7 +39,8 @@ struct ClipListView: View {
         }
         .navigationTitle("Clips")
         .navigationDestination(for: ClipConfig.self) { clip in
-            ClipView(config: clip)
+            ClipView(config: clip, initialFullscreen: deepLinkFullscreen)
+                .onAppear { deepLinkFullscreen = false }
         }
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {

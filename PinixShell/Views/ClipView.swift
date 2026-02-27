@@ -6,8 +6,15 @@ import WebKit
 
 struct ClipView: View {
     let config: ClipConfig
+    let initialFullscreen: Bool
     @State private var showShortcutGuide = false
-    @State private var isFullscreen = false
+    @State private var isFullscreen: Bool
+
+    init(config: ClipConfig, initialFullscreen: Bool = false) {
+        self.config = config
+        self.initialFullscreen = initialFullscreen
+        self._isFullscreen = State(initialValue: initialFullscreen)
+    }
 
     var body: some View {
         ClipWebView(config: config)
@@ -28,7 +35,7 @@ struct ClipView: View {
                     }
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button {
-                            UIPasteboard.general.string = "pinix://clip/\(config.alias)"
+                            UIPasteboard.general.string = "pinix://clip/\(config.alias)?fullscreen=1"
                             showShortcutGuide = true
                         } label: {
                             Image(systemName: "plus.app")
