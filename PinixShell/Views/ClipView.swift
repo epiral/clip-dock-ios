@@ -9,6 +9,7 @@ struct ClipView: View {
     let initialFullscreen: Bool
     @State private var showShortcutGuide = false
     @State private var isFullscreen: Bool
+    @State private var safeAreaInsets: UIEdgeInsets = .zero
 
     init(config: ClipConfig, initialFullscreen: Bool = false) {
         self.config = config
@@ -17,41 +18,50 @@ struct ClipView: View {
     }
 
     var body: some View {
-        ClipWebView(config: config)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .ignoresSafeArea(.all)
-            .navigationTitle(config.alias)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar(isFullscreen ? .hidden : .visible, for: .navigationBar, .bottomBar)
-            .toolbar {
-                if !isFullscreen {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button {
-                            withAnimation(.easeInOut(duration: 0.3)) {
-                                isFullscreen = true
-                            }
-                        } label: {
-                            Image(systemName: "arrow.up.left.and.arrow.down.right")
+        ZStack {
+            ClipWebView(config: config, safeAreaInsets: safeAreaInsets)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .ignoresSafeArea(isFullscreen ? .all : [])
+            SafeAreaProbe { insets in
+                if safeAreaInsets != insets {
+                    safeAreaInsets = insets
+                }
+            }
+            .frame(width: 0, height: 0)
+            .allowsHitTesting(false)
+        }
+        .navigationTitle(config.alias)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(isFullscreen ? .hidden : .visible, for: .navigationBar, .bottomBar)
+        .toolbar {
+            if !isFullscreen {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            isFullscreen = true
                         }
+                    } label: {
+                        Image(systemName: "arrow.up.left.and.arrow.down.right")
                     }
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button {
-                            UIPasteboard.general.string = "pinix://clip/\(config.alias)?fullscreen=1"
-                            showShortcutGuide = true
-                        } label: {
-                            Image(systemName: "plus.app")
-                        }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        UIPasteboard.general.string = "pinix://clip/\(config.alias)?fullscreen=1"
+                        showShortcutGuide = true
+                    } label: {
+                        Image(systemName: "plus.app")
                     }
                 }
             }
-            .navigationBarHidden(isFullscreen)
-            .statusBarHidden(isFullscreen)
-            .persistentSystemOverlays(isFullscreen ? .hidden : .automatic)
-            .alert("链接已复制", isPresented: $showShortcutGuide) {
-                Button("知道了", role: .cancel) {}
-            } message: {
-                Text("打开「快捷指令」App → 右上角 + 新建快捷指令 → 搜索并添加「打开 URL」动作 → 粘贴链接 → 完成后长按快捷指令 → 添加到主屏幕")
-            }
+        }
+        .navigationBarHidden(isFullscreen)
+        .statusBarHidden(isFullscreen)
+        .persistentSystemOverlays(isFullscreen ? .hidden : .automatic)
+        .alert("链接已复制", isPresented: $showShortcutGuide) {
+            Button("知道了", role: .cancel) {}
+        } message: {
+            Text("打开「快捷指令」App → 右上角 + 新建快捷指令 → 搜索并添加「打开 URL」动作 → 粘贴链接 → 完成后长按快捷指令 → 添加到主屏幕")
+        }
     }
 }
 
@@ -59,6 +69,7 @@ struct ClipView: View {
 
 private struct ClipWebView: UIViewRepresentable {
     let config: ClipConfig
+    var safeAreaInsets: UIEdgeInsets = .zero
 
     func makeCoordinator() -> Coordinator {
         Coordinator()
@@ -90,6 +101,17 @@ private struct ClipWebView: UIViewRepresentable {
         webView.scrollView.contentInset = .zero
         webView.scrollView.scrollIndicatorInsets = .zero
 
+        // 注入 Safe Area CSS 变量（首帧兜底，后续在 updateUIView 中刷新）
+        let safeAreaScript = """
+            (function() {
+                var style = document.createElement('style');
+                style.textContent = ':root { --sat: \(safeAreaInsets.top)px; --sab: \(safeAreaInsets.bottom)px; --sal: \(safeAreaInsets.left)px; --sar: \(safeAreaInsets.right)px; }';
+                document.head ? document.head.appendChild(style) : document.documentElement.appendChild(style);
+            })();
+        """
+        let userScript = WKUserScript(source: safeAreaScript, injectionTime: .atDocumentStart, forMainFrameOnly: true)
+        wkConfig.userContentController.addUserScript(userScript)
+
         // 加载 Clip 入口（clipId 使用 alias）
         let safeAlias = config.alias.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? config.alias
         guard let entryURL = URL(string: "pinix-web://\(safeAlias)/web/index.html") else {
@@ -102,14 +124,38 @@ private struct ClipWebView: UIViewRepresentable {
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {
-        // Clip 配置变更时可在此更新
+        context.coordinator.applySafeAreaInsets(safeAreaInsets, to: webView)
     }
 
     class Coordinator: NSObject, WKNavigationDelegate {
         var bridge: JSBridge?
+        private var lastInsets: UIEdgeInsets = .zero
+
+        func applySafeAreaInsets(_ insets: UIEdgeInsets, to webView: WKWebView) {
+            guard insets != lastInsets else { return }
+            lastInsets = insets
+            let js = """
+                document.documentElement.style.setProperty('--sat', '\(insets.top)px');
+                document.documentElement.style.setProperty('--sab', '\(insets.bottom)px');
+                document.documentElement.style.setProperty('--sal', '\(insets.left)px');
+                document.documentElement.style.setProperty('--sar', '\(insets.right)px');
+            """
+            webView.evaluateJavaScript(js, completionHandler: nil)
+        }
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             print("[ClipView] 加载完成: \(webView.url?.absoluteString ?? "")")
+            // 注入 safe area insets，确保 Web 端 env() 有正确数值
+            if let windowInsets = webView.window?.safeAreaInsets {
+                applySafeAreaInsets(windowInsets, to: webView)
+                return
+            }
+            if let windowInsets = UIApplication.shared.connectedScenes
+                .compactMap({ $0 as? UIWindowScene })
+                .flatMap({ $0.windows })
+                .first(where: { $0.isKeyWindow })?.safeAreaInsets {
+                applySafeAreaInsets(windowInsets, to: webView)
+            }
         }
 
         func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
@@ -135,5 +181,43 @@ private struct ClipWebView: UIViewRepresentable {
             """
             webView.loadHTMLString(html, baseURL: nil)
         }
+    }
+}
+
+private struct SafeAreaProbe: UIViewRepresentable {
+    var onChange: (UIEdgeInsets) -> Void
+
+    func makeUIView(context: Context) -> SafeAreaProbeView {
+        let view = SafeAreaProbeView()
+        view.onChange = onChange
+        return view
+    }
+
+    func updateUIView(_ uiView: SafeAreaProbeView, context: Context) {
+        uiView.onChange = onChange
+        uiView.reportIfNeeded()
+    }
+}
+
+private final class SafeAreaProbeView: UIView {
+    var onChange: ((UIEdgeInsets) -> Void)?
+    private var lastInsets: UIEdgeInsets = .zero
+
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        reportIfNeeded()
+    }
+
+    override func safeAreaInsetsDidChange() {
+        super.safeAreaInsetsDidChange()
+        reportIfNeeded()
+    }
+
+    func reportIfNeeded() {
+        guard let window = window else { return }
+        let insets = window.safeAreaInsets
+        guard insets != lastInsets else { return }
+        lastInsets = insets
+        onChange?(insets)
     }
 }
