@@ -19,7 +19,7 @@ struct ClipView: View {
     var body: some View {
         ClipWebView(config: config)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .ignoresSafeArea(isFullscreen ? .all : [])
+            .ignoresSafeArea(.all)
             .navigationTitle(config.alias)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(isFullscreen ? .hidden : .visible, for: .navigationBar, .bottomBar)
@@ -128,7 +128,7 @@ private struct ClipWebView: UIViewRepresentable {
                 .replacingOccurrences(of: "\"", with: "\\\"")
                 .replacingOccurrences(of: "\n", with: "\\n")
             let html = """
-            <html><body style="background:#1a1a2e;color:#e94560;font-family:-apple-system,system-ui;padding:40px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh">
+            <html><head><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body style="background:#1a1a2e;color:#e94560;font-family:-apple-system,system-ui;padding:env(safe-area-inset-top,40px) 40px env(safe-area-inset-bottom,40px) 40px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh">
             <h2 style="margin-bottom:16px">加载失败</h2>
             <p style="font-size:14px;color:#aaa;max-width:80vw;word-break:break-all">\(escaped)</p>
             </body></html>
