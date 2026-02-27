@@ -1,10 +1,17 @@
 // JSBridge.swift
-// 路由分发器 — 将 JS 消息分派到 PinixBridgeHandler
+// 路由分发器 — 将 JS 消息分派到对应 Handler
 //
-// Clip JS 看到的接口：
-//   fetch("pinix-web://clip-id/app.js")       → Scheme 拦截 → ReadFile
-//   fetch("pinix-data://clip-id/voice.mp3")    → Scheme 拦截 → ReadFile（支持 Range）
-//   Bridge.invoke("createNote", { title: "Hello" })  → Bridge → ClipService.Invoke
+// JS 调用方式：
+//   Bridge.invoke("invoke", { args: [...] })          → PinixBridgeHandler  (Pinix RPC)
+//   Bridge.invoke("ios.clipboardRead")                → IOSSystemBridgeHandler
+//   Bridge.invoke("ios.haptic", { style: "medium" })  → IOSSystemBridgeHandler
+//   Bridge.invoke("ios.locationGet")                  → IOSLocationBridgeHandler
+//   Bridge.invoke("ios.cameraCapture")                → IOSMediaBridgeHandler
+//   Bridge.invoke("ios.microphoneRecord", { maxSeconds: 30 }) → IOSMediaBridgeHandler
+//
+// 命名规约：
+//   "invoke"  — 通用 Pinix RPC 入口，无平台前缀
+//   "ios.*"   — iOS 平台专属能力，未来 Android/Desktop 自行实现同名不同前缀的版本
 
 import Foundation
 import WebKit
@@ -12,12 +19,18 @@ import WebKit
 @MainActor
 final class JSBridge: NSObject, WKScriptMessageHandlerWithReply {
 
-    private let pinixHandler: PinixBridgeHandler
+    private let pinixHandler:   PinixBridgeHandler
+    private let iosSystem:      IOSSystemBridgeHandler
+    private let iosLocation:    IOSLocationBridgeHandler
+    private let iosMedia:       IOSMediaBridgeHandler
 
     // MARK: - Init
 
     init(pinixHost: String = "", pinixToken: String = "") {
-        self.pinixHandler = PinixBridgeHandler(host: pinixHost, token: pinixToken)
+        self.pinixHandler  = PinixBridgeHandler(host: pinixHost, token: pinixToken)
+        self.iosSystem     = IOSSystemBridgeHandler()
+        self.iosLocation   = IOSLocationBridgeHandler()
+        self.iosMedia      = IOSMediaBridgeHandler()
         super.init()
     }
 
@@ -63,13 +76,24 @@ final class JSBridge: NSObject, WKScriptMessageHandlerWithReply {
             return
         }
 
+        // console 拦截（内部消息，不走 Bridge 路由）
         if action == "consoleLog" {
             let level = body["level"] as? String ?? "log"
             let msg = body["message"] as? String ?? ""
             print("[JS:\(level)] \(msg)")
             replyHandler("ok", nil)
-        } else if PinixBridgeHandler.actions.contains(action) {
+            return
+        }
+
+        // 路由分发
+        if PinixBridgeHandler.actions.contains(action) {
             pinixHandler.handle(action: action, body: body, replyHandler: replyHandler)
+        } else if IOSSystemBridgeHandler.actions.contains(action) {
+            iosSystem.handle(action: action, body: body, replyHandler: replyHandler)
+        } else if IOSLocationBridgeHandler.actions.contains(action) {
+            iosLocation.handle(action: action, body: body, replyHandler: replyHandler)
+        } else if IOSMediaBridgeHandler.actions.contains(action) {
+            iosMedia.handle(action: action, body: body, replyHandler: replyHandler)
         } else {
             replyHandler(nil, "Unknown action: \(action)")
         }
@@ -77,20 +101,17 @@ final class JSBridge: NSObject, WKScriptMessageHandlerWithReply {
 
     // MARK: - 注入的辅助 JS
 
-    /// Bridge.invoke(action, payload) — 唯一写操作入口
+    /// Bridge.invoke(action, payload?)
+    /// - action: string — handler 路由键，如 "invoke"、"ios.clipboardRead"
+    /// - payload: object — 透传给 handler 的参数（可选）
     private static let bridgeHelperJS = """
     window.Bridge = {
-        async invoke(action) {
-            var payload = {};
-            if (arguments.length > 1 && typeof arguments[1] === 'object') {
-                payload = arguments[1];
+        async invoke(action, payload) {
+            var body = { action: action };
+            if (payload && typeof payload === 'object') {
+                Object.assign(body, payload);
             }
-            return await window.webkit.messageHandlers.pinix.postMessage({
-                action: "invoke",
-                name: action,
-                args: payload.args || [],
-                stdin: payload.stdin || ""
-            });
+            return await window.webkit.messageHandlers.pinix.postMessage(body);
         }
     };
     """

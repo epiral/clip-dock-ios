@@ -37,6 +37,11 @@ targets:
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: 7MTHK6DGS4
         SWIFT_VERSION: "5.0"
+        # iOS 专属能力权限声明（对应 IOSSystemBridgeHandler / IOSLocationBridgeHandler / IOSMediaBridgeHandler）
+        INFOPLIST_KEY_NSCameraUsageDescription: "Clip 需要访问相机以拍摄图片"
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "Clip 需要访问麦克风以录制音频"
+        INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "Clip 需要访问位置以获取当前坐标"
+        INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "Clip 需要访问相册以选择图片"
     dependencies:
       - package: Connect
         product: Connect
