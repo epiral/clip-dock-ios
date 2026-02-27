@@ -19,9 +19,8 @@ struct ClipView: View {
 
     var body: some View {
         ZStack {
-            ClipWebView(config: config, safeAreaInsets: safeAreaInsets)
+            ClipWebView(config: config, safeAreaInsets: safeAreaInsets, isFullscreen: isFullscreen)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .ignoresSafeArea(isFullscreen ? .all : [])
             SafeAreaProbe { insets in
                 if safeAreaInsets != insets {
                     safeAreaInsets = insets
@@ -30,6 +29,8 @@ struct ClipView: View {
             .frame(width: 0, height: 0)
             .allowsHitTesting(false)
         }
+        .background(Color(red: 0.1, green: 0.1, blue: 0.18))
+        .ignoresSafeArea(isFullscreen ? .all : [])
         .navigationTitle(config.alias)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(isFullscreen ? .hidden : .visible, for: .navigationBar, .bottomBar)
@@ -65,17 +66,79 @@ struct ClipView: View {
     }
 }
 
+// MARK: - ClipWebViewContainer（UIKit 容器，全屏模式下通过 additionalSafeAreaInsets 让 WKWebView 铺满全屏）
+
+private final class ClipWebViewContainer: UIView {
+    let webView: WKWebView
+    var extendToEdges = false {
+        didSet { if extendToEdges != oldValue { negateHostingSafeArea() } }
+    }
+
+    init(webView: WKWebView) {
+        self.webView = webView
+        super.init(frame: .zero)
+        addSubview(webView)
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        webView.frame = bounds
+    }
+
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        negateHostingSafeArea()
+    }
+
+    override func safeAreaInsetsDidChange() {
+        super.safeAreaInsetsDidChange()
+        negateHostingSafeArea()
+    }
+
+    /// 全屏模式：将 hosting controller 的 additionalSafeAreaInsets 设为窗口 insets 的负值，
+    /// 使 SwiftUI 布局认为 Safe Area 为零，WKWebView 可铺满整个屏幕
+    private func negateHostingSafeArea() {
+        guard let vc = findViewController() else { return }
+        if extendToEdges, let window = window {
+            let insets = window.safeAreaInsets
+            let needed = UIEdgeInsets(
+                top: -insets.top, left: -insets.left,
+                bottom: -insets.bottom, right: -insets.right
+            )
+            if vc.additionalSafeAreaInsets != needed {
+                vc.additionalSafeAreaInsets = needed
+            }
+        } else {
+            if vc.additionalSafeAreaInsets != .zero {
+                vc.additionalSafeAreaInsets = .zero
+            }
+        }
+    }
+
+    private func findViewController() -> UIViewController? {
+        var responder: UIResponder? = self
+        while let r = responder?.next {
+            if let vc = r as? UIViewController { return vc }
+            responder = r
+        }
+        return nil
+    }
+}
+
 // MARK: - ClipWebView（UIViewRepresentable）
 
 private struct ClipWebView: UIViewRepresentable {
     let config: ClipConfig
     var safeAreaInsets: UIEdgeInsets = .zero
+    var isFullscreen: Bool = false
 
     func makeCoordinator() -> Coordinator {
         Coordinator()
     }
 
-    func makeUIView(context: Context) -> WKWebView {
+    func makeUIView(context: Context) -> ClipWebViewContainer {
         let wkConfig = WKWebViewConfiguration()
 
         // 注册 pinix-web:// scheme handler（web 资源）
@@ -101,30 +164,54 @@ private struct ClipWebView: UIViewRepresentable {
         webView.scrollView.contentInset = .zero
         webView.scrollView.scrollIndicatorInsets = .zero
 
-        // 注入 Safe Area CSS 变量（首帧兜底，后续在 updateUIView 中刷新）
-        let safeAreaScript = """
+        // 注入 viewport-fit=cover + Safe Area CSS 变量 + env() 兜底覆盖
+        // 因为 additionalSafeAreaInsets 取反让 WKWebView 铺满全屏，env(safe-area-inset-*) 返回 0，
+        // 所以需要用 CSS 覆盖将 env() 用法替换为 var(--sab) 等自定义属性
+        let bootstrapScript = """
             (function() {
+                // 确保 viewport-fit=cover，让 web 内容填满全屏
+                var meta = document.querySelector('meta[name="viewport"]');
+                if (meta) {
+                    if (meta.content.indexOf('viewport-fit') === -1) {
+                        meta.content += ', viewport-fit=cover';
+                    }
+                } else {
+                    meta = document.createElement('meta');
+                    meta.name = 'viewport';
+                    meta.content = 'width=device-width, initial-scale=1, viewport-fit=cover';
+                    (document.head || document.documentElement).appendChild(meta);
+                }
+                // Safe Area CSS 变量 + 覆盖常见 env() 用法
                 var style = document.createElement('style');
-                style.textContent = ':root { --sat: \(safeAreaInsets.top)px; --sab: \(safeAreaInsets.bottom)px; --sal: \(safeAreaInsets.left)px; --sar: \(safeAreaInsets.right)px; }';
-                document.head ? document.head.appendChild(style) : document.documentElement.appendChild(style);
+                style.id = 'pinix-safe-area';
+                style.textContent = ':root { --sat: \(safeAreaInsets.top)px; --sab: \(safeAreaInsets.bottom)px; --sal: \(safeAreaInsets.left)px; --sar: \(safeAreaInsets.right)px; }' +
+                    '.tab-bar { padding-bottom: max(6px, var(--sab, 0px)) !important; }' +
+                    '.detail-panel { padding-bottom: max(16px, var(--sab, 0px)) !important; }';
+                (document.head || document.documentElement).appendChild(style);
             })();
         """
-        let userScript = WKUserScript(source: safeAreaScript, injectionTime: .atDocumentStart, forMainFrameOnly: true)
+        let userScript = WKUserScript(source: bootstrapScript, injectionTime: .atDocumentEnd, forMainFrameOnly: true)
         wkConfig.userContentController.addUserScript(userScript)
 
         // 加载 Clip 入口（clipId 使用 alias）
         let safeAlias = config.alias.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? config.alias
         guard let entryURL = URL(string: "pinix-web://\(safeAlias)/web/index.html") else {
             print("[ClipView] 无效 URL，alias: \(config.alias)")
-            return webView
+            let container = ClipWebViewContainer(webView: webView)
+            container.extendToEdges = isFullscreen
+            return container
         }
         webView.load(URLRequest(url: entryURL))
 
-        return webView
+        let container = ClipWebViewContainer(webView: webView)
+        container.extendToEdges = isFullscreen
+        return container
     }
 
-    func updateUIView(_ webView: WKWebView, context: Context) {
-        context.coordinator.applySafeAreaInsets(safeAreaInsets, to: webView)
+    func updateUIView(_ container: ClipWebViewContainer, context: Context) {
+        container.extendToEdges = isFullscreen
+        container.setNeedsLayout()
+        context.coordinator.applySafeAreaInsets(safeAreaInsets, to: container.webView)
     }
 
     class Coordinator: NSObject, WKNavigationDelegate {
@@ -139,18 +226,24 @@ private struct ClipWebView: UIViewRepresentable {
                 document.documentElement.style.setProperty('--sab', '\(insets.bottom)px');
                 document.documentElement.style.setProperty('--sal', '\(insets.left)px');
                 document.documentElement.style.setProperty('--sar', '\(insets.right)px');
+                // 直接修补使用 env() 的元素，因为 additionalSafeAreaInsets 取反后 env() 返回 0
+                document.querySelectorAll('.tab-bar').forEach(function(el) {
+                    el.style.paddingBottom = Math.max(6, \(insets.bottom)) + 'px';
+                });
+                document.querySelectorAll('.detail-panel').forEach(function(el) {
+                    el.style.paddingBottom = Math.max(16, \(insets.bottom)) + 'px';
+                });
             """
             webView.evaluateJavaScript(js, completionHandler: nil)
         }
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             print("[ClipView] 加载完成: \(webView.url?.absoluteString ?? "")")
-            // 注入 safe area insets，确保 Web 端 env() 有正确数值
+            // 页面加载完毕，强制重新注入 CSS 变量（防止 updateUIView 在页面未就绪时注入失败）
+            lastInsets = .zero
             if let windowInsets = webView.window?.safeAreaInsets {
                 applySafeAreaInsets(windowInsets, to: webView)
-                return
-            }
-            if let windowInsets = UIApplication.shared.connectedScenes
+            } else if let windowInsets = UIApplication.shared.connectedScenes
                 .compactMap({ $0 as? UIWindowScene })
                 .flatMap({ $0.windows })
                 .first(where: { $0.isKeyWindow })?.safeAreaInsets {
@@ -183,6 +276,8 @@ private struct ClipWebView: UIViewRepresentable {
         }
     }
 }
+
+// MARK: - SafeAreaProbe（UIKit 探针，获取真实 Safe Area Insets）
 
 private struct SafeAreaProbe: UIViewRepresentable {
     var onChange: (UIEdgeInsets) -> Void
