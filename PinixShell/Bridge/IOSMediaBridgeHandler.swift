@@ -50,6 +50,9 @@ final class IOSMediaBridgeHandler: NSObject {
     }
 
     private func capturePhoto() async throws -> [String: Any] {
+        guard cameraContinuation == nil else {
+            throw IOSBridgeError.alreadyInProgress
+        }
         return try await withCheckedThrowingContinuation { continuation in
             self.cameraContinuation = continuation
 
@@ -60,8 +63,8 @@ final class IOSMediaBridgeHandler: NSObject {
 
             guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
                   let root = scene.keyWindow?.rootViewController else {
-                continuation.resume(throwing: IOSBridgeError.noRootViewController)
                 self.cameraContinuation = nil
+                continuation.resume(throwing: IOSBridgeError.noRootViewController)
                 return
             }
             root.present(picker, animated: true)
@@ -86,6 +89,9 @@ final class IOSMediaBridgeHandler: NSObject {
     }
 
     private func recordAudio(maxSeconds: Double) async throws -> [String: Any] {
+        guard recordingContinuation == nil else {
+            throw IOSBridgeError.alreadyInProgress
+        }
         let session = AVAudioSession.sharedInstance()
         try session.setCategory(.playAndRecord, mode: .default)
         try session.setActive(true)
@@ -204,6 +210,7 @@ enum IOSBridgeError: LocalizedError {
     case imageConversionFailed
     case cancelled
     case recordingFailed
+    case alreadyInProgress
 
     var errorDescription: String? {
         switch self {
@@ -211,6 +218,7 @@ enum IOSBridgeError: LocalizedError {
         case .imageConversionFailed:  return "Failed to convert image to JPEG"
         case .cancelled:              return "User cancelled"
         case .recordingFailed:        return "Audio recording failed"
+        case .alreadyInProgress:      return "Operation already in progress"
         }
     }
 }

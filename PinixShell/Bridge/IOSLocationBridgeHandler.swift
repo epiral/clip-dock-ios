@@ -44,6 +44,9 @@ final class IOSLocationBridgeHandler: NSObject {
     }
 
     private func getLocation() async throws -> [String: Any] {
+        guard locationContinuation == nil else {
+            throw IOSLocationError.alreadyInProgress
+        }
         return try await withCheckedThrowingContinuation { continuation in
             self.locationContinuation = continuation
             let manager = CLLocationManager()
@@ -122,7 +125,12 @@ extension IOSLocationBridgeHandler: CLLocationManagerDelegate {
 
 enum IOSLocationError: LocalizedError {
     case denied
+    case alreadyInProgress
+
     var errorDescription: String? {
-        "Location access denied. Please allow access in Settings."
+        switch self {
+        case .denied:            return "Location access denied. Please allow access in Settings."
+        case .alreadyInProgress: return "Location request already in progress."
+        }
     }
 }

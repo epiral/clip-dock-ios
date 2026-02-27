@@ -7,7 +7,8 @@
 import WebKit
 import Connect
 
-class PinixWebSchemeHandler: NSObject, WKURLSchemeHandler {
+@MainActor
+final class PinixWebSchemeHandler: NSObject, WKURLSchemeHandler {
 
     private let host: String
     private let token: String
@@ -21,25 +22,25 @@ class PinixWebSchemeHandler: NSObject, WKURLSchemeHandler {
         super.init()
     }
 
-    func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
-        let taskId = ObjectIdentifier(urlSchemeTask as AnyObject)
+    nonisolated func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
+        Task { @MainActor in
+            let taskId = ObjectIdentifier(urlSchemeTask as AnyObject)
 
-        guard let requestURL = urlSchemeTask.request.url else {
-            urlSchemeTask.didFailWithError(makeError("无效 URL"))
-            return
-        }
+            guard let requestURL = urlSchemeTask.request.url else {
+                urlSchemeTask.didFailWithError(self.makeError("无效 URL"))
+                return
+            }
 
-        // pinix-web://clip-id/path/to/file → path = /path/to/file
-        let path = requestURL.path
-        guard !path.isEmpty, path != "/" else {
-            urlSchemeTask.didFailWithError(makeError("路径不能为空"))
-            return
-        }
+            // pinix-web://clip-id/path/to/file → path = /path/to/file
+            let path = requestURL.path
+            guard !path.isEmpty, path != "/" else {
+                urlSchemeTask.didFailWithError(self.makeError("路径不能为空"))
+                return
+            }
 
-        // 转为 workdir 相对路径：直接去掉开头 /
-        let relativePath = String(path.dropFirst())
+            // 转为 workdir 相对路径：直接去掉开头 /
+            let relativePath = String(path.dropFirst())
 
-        Task {
             do {
                 // 1. 先检查磁盘缓存
                 if let cached = DiskCache.shared.readWebCache(alias: self.alias, path: relativePath) {
@@ -87,9 +88,11 @@ class PinixWebSchemeHandler: NSObject, WKURLSchemeHandler {
         }
     }
 
-    func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {
-        let taskId = ObjectIdentifier(urlSchemeTask as AnyObject)
-        stoppedTasks.insert(taskId)
+    nonisolated func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {
+        Task { @MainActor in
+            let taskId = ObjectIdentifier(urlSchemeTask as AnyObject)
+            self.stoppedTasks.insert(taskId)
+        }
     }
 
     // MARK: - ReadFile streaming

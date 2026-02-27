@@ -7,7 +7,8 @@
 import WebKit
 import Connect
 
-class PinixDataSchemeHandler: NSObject, WKURLSchemeHandler {
+@MainActor
+final class PinixDataSchemeHandler: NSObject, WKURLSchemeHandler {
 
     private let host: String
     private let token: String
@@ -21,25 +22,25 @@ class PinixDataSchemeHandler: NSObject, WKURLSchemeHandler {
         super.init()
     }
 
-    func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
-        let taskId = ObjectIdentifier(urlSchemeTask as AnyObject)
+    nonisolated func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
+        Task { @MainActor in
+            let taskId = ObjectIdentifier(urlSchemeTask as AnyObject)
 
-        guard let requestURL = urlSchemeTask.request.url else {
-            urlSchemeTask.didFailWithError(makeError("无效 URL"))
-            return
-        }
+            guard let requestURL = urlSchemeTask.request.url else {
+                urlSchemeTask.didFailWithError(self.makeError("无效 URL"))
+                return
+            }
 
-        let path = requestURL.path
-        guard !path.isEmpty, path != "/" else {
-            urlSchemeTask.didFailWithError(makeError("路径不能为空"))
-            return
-        }
+            let path = requestURL.path
+            guard !path.isEmpty, path != "/" else {
+                urlSchemeTask.didFailWithError(self.makeError("路径不能为空"))
+                return
+            }
 
-        // 转为 workdir 相对路径：data/path/to/file
-        let relativePath = "data" + path
-        let rangeHeader = urlSchemeTask.request.value(forHTTPHeaderField: "Range")
+            // 转为 workdir 相对路径：data/path/to/file
+            let relativePath = "data" + path
+            let rangeHeader = urlSchemeTask.request.value(forHTTPHeaderField: "Range")
 
-        Task {
             do {
                 if let rangeHeader {
                     // Range 请求：不走缓存，维持原逻辑
@@ -87,9 +88,11 @@ class PinixDataSchemeHandler: NSObject, WKURLSchemeHandler {
         }
     }
 
-    func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {
-        let taskId = ObjectIdentifier(urlSchemeTask as AnyObject)
-        stoppedTasks.insert(taskId)
+    nonisolated func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {
+        Task { @MainActor in
+            let taskId = ObjectIdentifier(urlSchemeTask as AnyObject)
+            self.stoppedTasks.insert(taskId)
+        }
     }
 
     // MARK: - Range 请求处理
