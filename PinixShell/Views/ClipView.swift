@@ -65,7 +65,6 @@ struct ClipView: View {
             }
         }
         .navigationBarHidden(isFullscreen)
-        .statusBarHidden(isFullscreen)
         .persistentSystemOverlays(isFullscreen ? .hidden : .automatic)
         .alert("链接已复制", isPresented: $showShortcutGuide) {
             Button("知道了", role: .cancel) {}
