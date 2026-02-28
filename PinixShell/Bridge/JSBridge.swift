@@ -8,6 +8,9 @@
 //   Bridge.invoke("ios.locationGet")                  → IOSLocationBridgeHandler
 //   Bridge.invoke("ios.cameraCapture")                → IOSMediaBridgeHandler
 //   Bridge.invoke("ios.microphoneRecord", { maxSeconds: 30 }) → IOSMediaBridgeHandler
+//   Bridge.invoke("ios.speakingStart", { apiKey, topic? })   → SpeakingSessionHandler
+//   Bridge.invoke("ios.speakingStop")                        → SpeakingSessionHandler
+//   Bridge.invoke("ios.speakingStatus")                      → SpeakingSessionHandler
 //
 // 命名规约：
 //   "invoke"  — 通用 Pinix RPC 入口，无平台前缀
@@ -24,6 +27,7 @@ final class JSBridge: NSObject, WKScriptMessageHandlerWithReply {
     private let iosLocation:    IOSLocationBridgeHandler
     private let iosMedia:       IOSMediaBridgeHandler
     private let iosHealth:      IOSHealthBridgeHandler
+    private let iosSpeaking:    SpeakingSessionHandler
 
     // MARK: - Init
 
@@ -33,6 +37,7 @@ final class JSBridge: NSObject, WKScriptMessageHandlerWithReply {
         self.iosLocation   = IOSLocationBridgeHandler()
         self.iosMedia      = IOSMediaBridgeHandler()
         self.iosHealth     = IOSHealthBridgeHandler()
+        self.iosSpeaking   = SpeakingSessionHandler()
         super.init()
     }
 
@@ -63,6 +68,11 @@ final class JSBridge: NSObject, WKScriptMessageHandlerWithReply {
     /// 更新 Pinix 连接配置（当 Clip 切换时调用）
     func updatePinixConfig(host: String, token: String) {
         pinixHandler.updateConfig(host: host, token: token)
+    }
+
+    /// 绑定 WKWebView 引用（用于 SpeakingSessionHandler 推送事件到 JS）
+    func setWebView(_ webView: WKWebView) {
+        iosSpeaking.webView = webView
     }
 
     // MARK: - WKScriptMessageHandlerWithReply
@@ -98,6 +108,8 @@ final class JSBridge: NSObject, WKScriptMessageHandlerWithReply {
             iosMedia.handle(action: action, body: body, replyHandler: replyHandler)
         } else if IOSHealthBridgeHandler.actions.contains(action) {
             iosHealth.handle(action: action, body: body, replyHandler: replyHandler)
+        } else if SpeakingSessionHandler.actions.contains(action) {
+            iosSpeaking.handle(action: action, body: body, replyHandler: replyHandler)
         } else {
             replyHandler(nil, "Unknown action: \(action)")
         }

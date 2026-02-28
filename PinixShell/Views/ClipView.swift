@@ -175,6 +175,7 @@ private struct ClipWebView: UIViewRepresentable {
         context.coordinator.bridge = bridge
 
         let webView = WKWebView(frame: .zero, configuration: wkConfig)
+        bridge.setWebView(webView)
         webView.navigationDelegate = context.coordinator
         webView.isInspectable = true
         reloader.webView = webView
