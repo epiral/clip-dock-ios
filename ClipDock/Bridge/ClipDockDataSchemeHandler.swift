@@ -5,7 +5,8 @@
 // 支持 Range 请求（200/206/416），只读
 
 import WebKit
-import Connect
+import GRPCCore
+import GRPCNIOTransportHTTP2
 
 @MainActor
 final class ClipDockDataSchemeHandler: NSObject, WKURLSchemeHandler {
@@ -138,8 +139,6 @@ final class ClipDockDataSchemeHandler: NSObject, WKURLSchemeHandler {
 
     /// 通过 ClipService.ReadFile（server streaming）读取文件
     private func readFile(path: String, offset: Int64, length: Int64, ifNoneMatch: String = "") async throws -> FileResult {
-        let client = makeClient()
-
         var request = Pinix_V1_ReadFileRequest()
         request.path = path
         request.offset = offset
@@ -148,57 +147,50 @@ final class ClipDockDataSchemeHandler: NSObject, WKURLSchemeHandler {
             request.ifNoneMatch = ifNoneMatch
         }
 
-        var headers: Connect.Headers = [:]
-        if !token.isEmpty {
-            headers["authorization"] = ["Bearer \(token)"]
-        }
+        let metadata = makeMetadata()
+        let (hostname, port) = try ClipDockBridgeHandler.parseHost(host)
 
-        let stream = client.readFile(headers: headers)
-        try stream.send(request)
+        return try await withGRPCClient(
+            transport: .http2NIOPosix(
+                target: .dns(host: hostname, port: port),
+                transportSecurity: .plaintext
+            )
+        ) { client in
+            let clipService = Pinix_V1_ClipService.Client(wrapping: client)
+            return try await clipService.readFile(request, metadata: metadata) { response in
+                var chunks: [(offset: Int64, data: Data)] = []
+                var mimeType = "application/octet-stream"
+                var totalSize: Int64 = 0
+                var etag = ""
+                var notModified = false
 
-        var chunks: [(offset: Int64, data: Data)] = []
-        var mimeType = "application/octet-stream"
-        var totalSize: Int64 = 0
-        var etag = ""
-        var notModified = false
-        var streamError: Error?
-
-        for await result in stream.results() {
-            switch result {
-            case .headers:
-                break
-            case .message(let chunk):
-                if chunk.notModified {
-                    notModified = true
-                    if !chunk.etag.isEmpty { etag = chunk.etag }
-                    if !chunk.mimeType.isEmpty { mimeType = chunk.mimeType }
-                } else {
-                    chunks.append((offset: chunk.offset, data: chunk.data))
-                    if !chunk.mimeType.isEmpty { mimeType = chunk.mimeType }
-                    if chunk.totalSize > 0 { totalSize = chunk.totalSize }
-                    if !chunk.etag.isEmpty { etag = chunk.etag }
+                for try await chunk in response.messages {
+                    if chunk.notModified {
+                        notModified = true
+                        if !chunk.etag.isEmpty { etag = chunk.etag }
+                        if !chunk.mimeType.isEmpty { mimeType = chunk.mimeType }
+                    } else {
+                        chunks.append((offset: chunk.offset, data: chunk.data))
+                        if !chunk.mimeType.isEmpty { mimeType = chunk.mimeType }
+                        if chunk.totalSize > 0 { totalSize = chunk.totalSize }
+                        if !chunk.etag.isEmpty { etag = chunk.etag }
+                    }
                 }
-            case .complete(_, let error, _):
-                if let error { streamError = error }
+
+                if notModified {
+                    return FileResult(data: Data(), mimeType: mimeType, totalSize: 0, etag: etag, notModified: true)
+                }
+
+                // 按 offset 排序后拼合
+                chunks.sort { $0.offset < $1.offset }
+                var assembled = Data()
+                for chunk in chunks {
+                    assembled.append(chunk.data)
+                }
+
+                return FileResult(data: assembled, mimeType: mimeType, totalSize: totalSize, etag: etag, notModified: false)
             }
         }
-
-        if let streamError {
-            throw makeError("ReadFile 失败: \(streamError)")
-        }
-
-        if notModified {
-            return FileResult(data: Data(), mimeType: mimeType, totalSize: 0, etag: etag, notModified: true)
-        }
-
-        // 按 offset 排序后拼合
-        chunks.sort { $0.offset < $1.offset }
-        var assembled = Data()
-        for chunk in chunks {
-            assembled.append(chunk.data)
-        }
-
-        return FileResult(data: assembled, mimeType: mimeType, totalSize: totalSize, etag: etag, notModified: false)
     }
 
     // MARK: - 响应辅助
@@ -275,21 +267,15 @@ final class ClipDockDataSchemeHandler: NSObject, WKURLSchemeHandler {
         return start..<end
     }
 
-    // MARK: - RPC Client
+    // MARK: - 辅助
 
-    private func makeClient() -> Pinix_V1_ClipServiceClient {
-        let protocolClient = ProtocolClient(
-            httpClient: URLSessionHTTPClient(),
-            config: ProtocolClientConfig(
-                host: host,
-                networkProtocol: .connect,
-                codec: ProtoCodec()
-            )
-        )
-        return Pinix_V1_ClipServiceClient(client: protocolClient)
+    private func makeMetadata() -> Metadata {
+        var metadata: Metadata = [:]
+        if !token.isEmpty {
+            metadata.addString("Bearer \(token)", forKey: "authorization")
+        }
+        return metadata
     }
-
-    // MARK: - 错误辅助
 
     private func makeError(_ message: String) -> NSError {
         NSError(domain: "ClipDockDataScheme", code: -1,

@@ -2,11 +2,11 @@ version: v2
 plugins:
   # SwiftProtobuf 消息类型
   - remote: buf.build/apple/swift
-    out: PinixShell/Generated
+    out: ClipDock/Generated
     opt: Visibility=Internal
-  # Connect-Swift 客户端
-  - remote: buf.build/connectrpc/swift
-    out: PinixShell/Generated
+  # gRPC Swift 2 客户端/服务端 stub
+  - local: protoc-gen-grpc-swift-2
+    out: ClipDock/Generated
     opt: Visibility=Internal
 inputs:
   - directory: proto

@@ -3,7 +3,8 @@
 
 import SwiftUI
 import WebKit
-import Connect
+import GRPCCore
+import GRPCNIOTransportHTTP2
 
 struct ClipView: View {
     let bookmark: Bookmark
@@ -80,22 +81,28 @@ struct ClipView: View {
     // MARK: - GetInfo RPC
 
     private func fetchClipInfo() async {
-        let protocolClient = ProtocolClient(
-            httpClient: URLSessionHTTPClient(),
-            config: ProtocolClientConfig(
-                host: bookmark.server_url,
-                networkProtocol: .connect,
-                codec: ProtoCodec()
-            )
-        )
-        let client = Pinix_V1_ClipServiceClient(client: protocolClient)
-        var headers: Connect.Headers = [:]
+        guard let (hostname, port) = try? ClipDockBridgeHandler.parseHost(bookmark.server_url) else { return }
+
+        var metadata: Metadata = [:]
         if !bookmark.token.isEmpty {
-            headers["authorization"] = ["Bearer \(bookmark.token)"]
+            metadata.addString("Bearer \(bookmark.token)", forKey: "authorization")
         }
-        let response = await client.getInfo(request: Pinix_V1_GetInfoRequest(), headers: headers)
-        if let info = response.message, !info.name.isEmpty {
-            clipTitle = info.name
+
+        do {
+            let info = try await withGRPCClient(
+                transport: .http2NIOPosix(
+                    target: .dns(host: hostname, port: port),
+                    transportSecurity: .plaintext
+                )
+            ) { client in
+                let clipService = Pinix_V1_ClipService.Client(wrapping: client)
+                return try await clipService.getInfo(Pinix_V1_GetInfoRequest(), metadata: metadata)
+            }
+            if !info.name.isEmpty {
+                clipTitle = info.name
+            }
+        } catch {
+            print("[ClipView] fetchClipInfo failed: \(error)")
         }
     }
 }

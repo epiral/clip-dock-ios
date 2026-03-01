@@ -5,7 +5,8 @@
 // 只读，不做写操作
 
 import WebKit
-import Connect
+import GRPCCore
+import GRPCNIOTransportHTTP2
 
 @MainActor
 final class ClipDockWebSchemeHandler: NSObject, WKURLSchemeHandler {
@@ -104,69 +105,47 @@ final class ClipDockWebSchemeHandler: NSObject, WKURLSchemeHandler {
 
     /// 通过 ClipService.ReadFile（server streaming）读取文件，收集所有 chunk 拼合
     private func readFile(path: String) async throws -> FileResult {
-        let client = makeClient()
-
         var request = Pinix_V1_ReadFileRequest()
         request.path = path
 
-        var headers: Connect.Headers = [:]
-        if !token.isEmpty {
-            headers["authorization"] = ["Bearer \(token)"]
-        }
+        let metadata = makeMetadata()
+        let (hostname, port) = try ClipDockBridgeHandler.parseHost(host)
 
-        let stream = client.readFile(headers: headers)
-        try stream.send(request)
+        return try await withGRPCClient(
+            transport: .http2NIOPosix(
+                target: .dns(host: hostname, port: port),
+                transportSecurity: .plaintext
+            )
+        ) { client in
+            let clipService = Pinix_V1_ClipService.Client(wrapping: client)
+            return try await clipService.readFile(request, metadata: metadata) { response in
+                var chunks: [(offset: Int64, data: Data)] = []
+                var mimeType = "application/octet-stream"
 
-        var chunks: [(offset: Int64, data: Data)] = []
-        var mimeType = "application/octet-stream"
-        var streamError: Error?
-
-        for await result in stream.results() {
-            switch result {
-            case .headers:
-                break
-            case .message(let chunk):
-                chunks.append((offset: chunk.offset, data: chunk.data))
-                if !chunk.mimeType.isEmpty {
-                    mimeType = chunk.mimeType
+                for try await chunk in response.messages {
+                    chunks.append((offset: chunk.offset, data: chunk.data))
+                    if !chunk.mimeType.isEmpty {
+                        mimeType = chunk.mimeType
+                    }
                 }
-            case .complete(_, let error, _):
-                if let error {
-                    streamError = error
+
+                // 按 offset 排序后拼合
+                chunks.sort { $0.offset < $1.offset }
+                var assembled = Data()
+                for chunk in chunks {
+                    assembled.append(chunk.data)
                 }
+
+                guard !assembled.isEmpty else {
+                    throw NSError(
+                        domain: "ClipDockWebScheme", code: -1,
+                        userInfo: [NSLocalizedDescriptionKey: "文件为空或不存在: \(path)"]
+                    )
+                }
+
+                return FileResult(data: assembled, mimeType: mimeType)
             }
         }
-
-        if let streamError {
-            throw makeError("ReadFile 失败: \(streamError)")
-        }
-
-        // 按 offset 排序后拼合
-        chunks.sort { $0.offset < $1.offset }
-        var assembled = Data()
-        for chunk in chunks {
-            assembled.append(chunk.data)
-        }
-
-        guard !assembled.isEmpty else {
-            throw makeError("文件为空或不存在: \(path)")
-        }
-
-        return FileResult(data: assembled, mimeType: mimeType)
-    }
-
-    // MARK: - RPC Client
-
-    private func makeClient() -> Pinix_V1_ClipServiceClient {
-        let protocolClient = ProtocolClient(
-            httpClient: URLSessionHTTPClient(),
-            config: ProtocolClientConfig(
-                host: host,
-                networkProtocol: .connect,
-                codec: ProtoCodec()
-            )
-        )
-        return Pinix_V1_ClipServiceClient(client: protocolClient)
     }
 
     // MARK: - MIME 推断（缓存命中时用）
@@ -188,7 +167,15 @@ final class ClipDockWebSchemeHandler: NSObject, WKURLSchemeHandler {
         return mimeMap[ext] ?? "application/octet-stream"
     }
 
-    // MARK: - 错误辅助
+    // MARK: - 辅助
+
+    private func makeMetadata() -> Metadata {
+        var metadata: Metadata = [:]
+        if !token.isEmpty {
+            metadata.addString("Bearer \(token)", forKey: "authorization")
+        }
+        return metadata
+    }
 
     private func makeError(_ message: String) -> NSError {
         NSError(domain: "ClipDockWebScheme", code: -1,

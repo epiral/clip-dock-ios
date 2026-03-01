@@ -1,14 +1,15 @@
 // ClipDockBridgeHandler.swift
-// ClipDock Connect-RPC Bridge — 将 JS Bridge 消息映射到 ClipService.Invoke RPC
+// ClipDock gRPC Bridge — 将 JS Bridge 消息映射到 ClipService.Invoke RPC
 //
 // 支持两种模式：
 //   action="invoke"       → 累积所有 chunk，一次性返回 { stdout, stderr, exitCode }（向后兼容）
 //   action="invokeStream" → 每个 chunk 实时回调 JS（通过 streamId + evaluateJavaScript）
 //
-// Depends: Connect, PinixClient (gen), JSBridge, WebKit
+// Depends: GRPCCore, GRPCNIOTransportHTTP2, GRPCProtobuf, WebKit
 
 import Foundation
-import Connect
+import GRPCCore
+import GRPCNIOTransportHTTP2
 import WebKit
 
 @MainActor
@@ -32,18 +33,6 @@ final class ClipDockBridgeHandler {
     func updateConfig(host: String, token: String) {
         self.host = host
         self.token = token
-    }
-
-    private func makeClient() -> Pinix_V1_ClipServiceClient {
-        let protocolClient = ProtocolClient(
-            httpClient: URLSessionHTTPClient(),
-            config: ProtocolClientConfig(
-                host: host,
-                networkProtocol: .grpcWeb,
-                codec: ProtoCodec()
-            )
-        )
-        return Pinix_V1_ClipServiceClient(client: protocolClient)
     }
 
     func handle(
@@ -80,54 +69,44 @@ final class ClipDockBridgeHandler {
         request.args = args
         request.stdin = stdin
 
-        var headers: Connect.Headers = [:]
-        if !token.isEmpty {
-            headers["authorization"] = ["Bearer \(token)"]
-        }
-
-        let client = makeClient()
+        let metadata = makeMetadata()
+        let hostString = host
 
         Task {
-            let stream = client.invoke(headers: headers)
             do {
-                try stream.send(request)
+                let (hostname, port) = try Self.parseHost(hostString)
+                let result: (Data, Data, Int32) = try await withGRPCClient(
+                    transport: .http2NIOPosix(
+                        target: .dns(host: hostname, port: port),
+                        transportSecurity: .plaintext
+                    )
+                ) { client in
+                    let clipService = Pinix_V1_ClipService.Client(wrapping: client)
+                    return try await clipService.invoke(request, metadata: metadata) { response in
+                        var stdoutBuf = Data()
+                        var stderrBuf = Data()
+                        var exitCode: Int32 = 0
+                        for try await chunk in response.messages {
+                            switch chunk.payload {
+                            case .stdout(let data): stdoutBuf.append(data)
+                            case .stderr(let data): stderrBuf.append(data)
+                            case .exitCode(let code): exitCode = code
+                            case nil: break
+                            }
+                        }
+                        return (stdoutBuf, stderrBuf, exitCode)
+                    }
+                }
+
+                let dict: [String: Any] = [
+                    "stdout": String(data: result.0, encoding: .utf8) ?? "",
+                    "stderr": String(data: result.1, encoding: .utf8) ?? "",
+                    "exitCode": Int(result.2)
+                ]
+                replyHandler(dict, nil)
             } catch {
                 replyHandler(nil, "invoke error: \(error.localizedDescription)")
-                return
             }
-
-            var stdoutBuf = Data()
-            var stderrBuf = Data()
-            var exitCode: Int32 = 0
-            var streamError: Error?
-
-            for await result in stream.results() {
-                switch result {
-                case .headers:
-                    break
-                case .message(let chunk):
-                    switch chunk.payload {
-                    case .stdout(let data): stdoutBuf.append(data)
-                    case .stderr(let data): stderrBuf.append(data)
-                    case .exitCode(let code): exitCode = code
-                    case nil: break
-                    }
-                case .complete(_, let error, _):
-                    if let error { streamError = error }
-                }
-            }
-
-            if let streamError {
-                replyHandler(nil, "invoke error: \(streamError.localizedDescription)")
-                return
-            }
-
-            let result: [String: Any] = [
-                "stdout": String(data: stdoutBuf, encoding: .utf8) ?? "",
-                "stderr": String(data: stderrBuf, encoding: .utf8) ?? "",
-                "exitCode": Int(exitCode)
-            ]
-            replyHandler(result, nil)
         }
     }
 
@@ -161,61 +140,86 @@ final class ClipDockBridgeHandler {
         request.args = args
         request.stdin = stdin
 
-        var headers: Connect.Headers = [:]
-        if !token.isEmpty {
-            headers["authorization"] = ["Bearer \(token)"]
-        }
+        let metadata = makeMetadata()
+        let hostString = host
+        let webView = self.webView
 
-        let client = makeClient()
-
-        Task { [weak self] in
-            guard let self else { return }
-
-            let stream = client.invoke(headers: headers)
+        Task {
             do {
-                try stream.send(request)
+                let (hostname, port) = try Self.parseHost(hostString)
+                try await withGRPCClient(
+                    transport: .http2NIOPosix(
+                        target: .dns(host: hostname, port: port),
+                        transportSecurity: .plaintext
+                    )
+                ) { client in
+                    let clipService = Pinix_V1_ClipService.Client(wrapping: client)
+                    try await clipService.invoke(request, metadata: metadata) { response in
+                        for try await chunk in response.messages {
+                            switch chunk.payload {
+                            case .stdout(let data):
+                                let text = String(data: data, encoding: .utf8) ?? ""
+                                let escaped = Self.escapeForJS(text)
+                                await MainActor.run {
+                                    webView?.evaluateJavaScript(
+                                        "window.__streamCallbacks['\(streamId)']?.onChunk(\(escaped))",
+                                        completionHandler: nil
+                                    )
+                                }
+                            case .stderr:
+                                break
+                            case .exitCode(let code):
+                                await MainActor.run {
+                                    webView?.evaluateJavaScript(
+                                        "window.__streamCallbacks['\(streamId)']?.onDone(\(code)); delete window.__streamCallbacks['\(streamId)']",
+                                        completionHandler: nil
+                                    )
+                                }
+                            case nil:
+                                break
+                            }
+                        }
+                    }
+                }
             } catch {
-                self.evalJS("window.__streamCallbacks['\(streamId)']?.onDone(-1); delete window.__streamCallbacks['\(streamId)']")
-                return
-            }
-
-            for await result in stream.results() {
-                switch result {
-                case .headers:
-                    break
-                case .message(let chunk):
-                    switch chunk.payload {
-                    case .stdout(let data):
-                        let text = String(data: data, encoding: .utf8) ?? ""
-                        let escaped = Self.escapeForJS(text)
-                        self.evalJS("window.__streamCallbacks['\(streamId)']?.onChunk(\(escaped))")
-                    case .stderr:
-                        // stderr 不回调 onChunk，仅记录
-                        break
-                    case .exitCode(let code):
-                        self.evalJS("window.__streamCallbacks['\(streamId)']?.onDone(\(code)); delete window.__streamCallbacks['\(streamId)']")
-                    case nil:
-                        break
-                    }
-                case .complete(_, let error, _):
-                    if error != nil {
-                        self.evalJS("window.__streamCallbacks['\(streamId)']?.onDone(-1); delete window.__streamCallbacks['\(streamId)']")
-                    }
+                await MainActor.run {
+                    webView?.evaluateJavaScript(
+                        "window.__streamCallbacks['\(streamId)']?.onDone(-1); delete window.__streamCallbacks['\(streamId)']",
+                        completionHandler: nil
+                    )
                 }
             }
         }
     }
 
-    // MARK: - JS 辅助
+    // MARK: - 辅助
 
-    /// 在 WKWebView 中执行 JS
-    private func evalJS(_ script: String) {
-        webView?.evaluateJavaScript(script, completionHandler: nil)
+    private func makeMetadata() -> Metadata {
+        var metadata: Metadata = [:]
+        if !token.isEmpty {
+            metadata.addString("Bearer \(token)", forKey: "authorization")
+        }
+        return metadata
     }
+
+    /// 从 URL 字符串 (如 "http://192.168.1.79:9875") 解析 host 和 port
+    nonisolated static func parseHost(_ urlString: String) throws -> (String, Int) {
+        guard let url = URL(string: urlString),
+              let hostname = url.host,
+              let port = url.port else {
+            throw NSError(
+                domain: "ClipDockBridge", code: -1,
+                userInfo: [NSLocalizedDescriptionKey: "Invalid host URL: \(urlString)"]
+            )
+        }
+        return (hostname, port)
+    }
+
+    // MARK: - JS 辅助
 
     /// 将字符串安全转义为 JS 字符串字面量（含引号）
     /// 通过 JSON 数组序列化再提取，确保正确处理 \n \r \t ' " \ 等
-    static func escapeForJS(_ text: String) -> String {
+    nonisolated static func escapeForJS(_ text: String) -> String {
         guard let data = try? JSONSerialization.data(withJSONObject: [text]),
               let json = String(data: data, encoding: .utf8) else {
             // fallback：单引号包裹，基本转义
