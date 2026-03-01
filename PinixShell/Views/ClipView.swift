@@ -3,24 +3,27 @@
 
 import SwiftUI
 import WebKit
+import Connect
 
 struct ClipView: View {
-    let config: ClipConfig
+    let bookmark: Bookmark
     let initialFullscreen: Bool
     @State private var showShortcutGuide = false
     @State private var isFullscreen: Bool
     @State private var safeAreaInsets: UIEdgeInsets = .zero
     @State private var webViewReloader = WebViewReloader()
+    @State private var clipTitle: String
 
-    init(config: ClipConfig, initialFullscreen: Bool = false) {
-        self.config = config
+    init(bookmark: Bookmark, initialFullscreen: Bool = false) {
+        self.bookmark = bookmark
         self.initialFullscreen = initialFullscreen
         self._isFullscreen = State(initialValue: initialFullscreen)
+        self._clipTitle = State(initialValue: bookmark.name)
     }
 
     var body: some View {
         ZStack {
-            ClipWebView(config: config, safeAreaInsets: safeAreaInsets, isFullscreen: isFullscreen, reloader: webViewReloader)
+            ClipWebView(bookmark: bookmark, safeAreaInsets: safeAreaInsets, isFullscreen: isFullscreen, reloader: webViewReloader)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             SafeAreaProbe { insets in
                 if safeAreaInsets != insets {
@@ -32,7 +35,7 @@ struct ClipView: View {
         }
         .background(Color(red: 0.1, green: 0.1, blue: 0.18))
         .ignoresSafeArea(isFullscreen ? .all : [])
-        .navigationTitle(config.alias)
+        .navigationTitle(clipTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(isFullscreen ? .hidden : .visible, for: .navigationBar, .bottomBar)
         .toolbar {
@@ -48,7 +51,7 @@ struct ClipView: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
-                        DiskCache.shared.clearWebCache(alias: config.alias)
+                        DiskCache.shared.clearWebCache(alias: bookmark.name)
                         webViewReloader.reload()
                     } label: {
                         Image(systemName: "arrow.clockwise")
@@ -56,7 +59,7 @@ struct ClipView: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
-                        UIPasteboard.general.string = "pinix://clip/\(config.alias)?fullscreen=1"
+                        UIPasteboard.general.string = "pinix://clip/\(bookmark.name)?fullscreen=1"
                         showShortcutGuide = true
                     } label: {
                         Image(systemName: "plus.app")
@@ -66,10 +69,33 @@ struct ClipView: View {
         }
         .navigationBarHidden(isFullscreen)
         .persistentSystemOverlays(isFullscreen ? .hidden : .automatic)
+        .task { await fetchClipInfo() }
         .alert("链接已复制", isPresented: $showShortcutGuide) {
             Button("知道了", role: .cancel) {}
         } message: {
             Text("打开「快捷指令」App → 右上角 + 新建快捷指令 → 搜索并添加「打开 URL」动作 → 粘贴链接 → 完成后长按快捷指令 → 添加到主屏幕")
+        }
+    }
+
+    // MARK: - GetInfo RPC
+
+    private func fetchClipInfo() async {
+        let protocolClient = ProtocolClient(
+            httpClient: URLSessionHTTPClient(),
+            config: ProtocolClientConfig(
+                host: bookmark.server_url,
+                networkProtocol: .connect,
+                codec: ProtoCodec()
+            )
+        )
+        let client = Pinix_V1_ClipServiceClient(client: protocolClient)
+        var headers: Connect.Headers = [:]
+        if !bookmark.token.isEmpty {
+            headers["authorization"] = ["Bearer \(bookmark.token)"]
+        }
+        let response = await client.getInfo(request: Pinix_V1_GetInfoRequest(), headers: headers)
+        if let info = response.message, !info.name.isEmpty {
+            clipTitle = info.name
         }
     }
 }
@@ -105,8 +131,6 @@ private final class ClipWebViewContainer: UIView {
         negateHostingSafeArea()
     }
 
-    /// 全屏模式：将 hosting controller 的 additionalSafeAreaInsets 设为窗口 insets 的负值，
-    /// 使 SwiftUI 布局认为 Safe Area 为零，WKWebView 可铺满整个屏幕
     private func negateHostingSafeArea() {
         guard let vc = findViewController() else { return }
         if extendToEdges, let window = window {
@@ -137,7 +161,6 @@ private final class ClipWebViewContainer: UIView {
 
 // MARK: - ClipWebView（UIViewRepresentable）
 
-/// WebView 刷新桥接：ClipView 按钮 → ClipWebView Coordinator
 @Observable
 final class WebViewReloader {
     fileprivate weak var webView: WKWebView?
@@ -148,7 +171,7 @@ final class WebViewReloader {
 }
 
 private struct ClipWebView: UIViewRepresentable {
-    let config: ClipConfig
+    let bookmark: Bookmark
     var safeAreaInsets: UIEdgeInsets = .zero
     var isFullscreen: Bool = false
     var reloader: WebViewReloader
@@ -161,15 +184,15 @@ private struct ClipWebView: UIViewRepresentable {
         let wkConfig = WKWebViewConfiguration()
 
         // 注册 pinix-web:// scheme handler（web 资源，带磁盘缓存）
-        let webHandler = PinixWebSchemeHandler(host: config.baseURL, token: config.token, alias: config.alias)
+        let webHandler = PinixWebSchemeHandler(host: bookmark.server_url, token: bookmark.token, alias: bookmark.name)
         wkConfig.setURLSchemeHandler(webHandler, forURLScheme: "pinix-web")
 
         // 注册 pinix-data:// scheme handler（数据文件，ETag 协商缓存，支持 Range）
-        let dataHandler = PinixDataSchemeHandler(host: config.baseURL, token: config.token, alias: config.alias)
+        let dataHandler = PinixDataSchemeHandler(host: bookmark.server_url, token: bookmark.token, alias: bookmark.name)
         wkConfig.setURLSchemeHandler(dataHandler, forURLScheme: "pinix-data")
 
         // 注册 JSBridge
-        let bridge = JSBridge(pinixHost: config.baseURL, pinixToken: config.token)
+        let bridge = JSBridge(pinixHost: bookmark.server_url, pinixToken: bookmark.token)
         JSBridge.register(to: wkConfig.userContentController, bridge: bridge)
         context.coordinator.bridge = bridge
 
@@ -185,12 +208,9 @@ private struct ClipWebView: UIViewRepresentable {
         webView.scrollView.contentInset = .zero
         webView.scrollView.scrollIndicatorInsets = .zero
 
-        // 注入 viewport-fit=cover + Safe Area CSS 变量 + env() 兜底覆盖
-        // 因为 additionalSafeAreaInsets 取反让 WKWebView 铺满全屏，env(safe-area-inset-*) 返回 0，
-        // 所以需要用 CSS 覆盖将 env() 用法替换为 var(--sab) 等自定义属性
+        // 注入 viewport-fit=cover + Safe Area CSS 变量
         let bootstrapScript = """
             (function() {
-                // 确保 viewport-fit=cover，让 web 内容填满全屏
                 var meta = document.querySelector('meta[name="viewport"]');
                 if (meta) {
                     if (meta.content.indexOf('viewport-fit') === -1) {
@@ -202,7 +222,6 @@ private struct ClipWebView: UIViewRepresentable {
                     meta.content = 'width=device-width, initial-scale=1, viewport-fit=cover';
                     (document.head || document.documentElement).appendChild(meta);
                 }
-                // Safe Area CSS 变量 + 覆盖常见 env() 用法
                 var style = document.createElement('style');
                 style.id = 'pinix-safe-area';
                 style.textContent = ':root { --sat: \(safeAreaInsets.top)px; --sab: \(safeAreaInsets.bottom)px; --sal: \(safeAreaInsets.left)px; --sar: \(safeAreaInsets.right)px; }' +
@@ -214,10 +233,10 @@ private struct ClipWebView: UIViewRepresentable {
         let userScript = WKUserScript(source: bootstrapScript, injectionTime: .atDocumentEnd, forMainFrameOnly: true)
         wkConfig.userContentController.addUserScript(userScript)
 
-        // 加载 Clip 入口（clipId 使用 alias）
-        let safeAlias = config.alias.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? config.alias
-        guard let entryURL = URL(string: "pinix-web://\(safeAlias)/web/index.html") else {
-            print("[ClipView] 无效 URL，alias: \(config.alias)")
+        // 加载 Clip 入口
+        let safeName = bookmark.name.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? bookmark.name
+        guard let entryURL = URL(string: "pinix-web://\(safeName)/web/index.html") else {
+            print("[ClipView] 无效 URL，name: \(bookmark.name)")
             let container = ClipWebViewContainer(webView: webView)
             container.extendToEdges = isFullscreen
             return container
@@ -247,7 +266,6 @@ private struct ClipWebView: UIViewRepresentable {
                 document.documentElement.style.setProperty('--sab', '\(insets.bottom)px');
                 document.documentElement.style.setProperty('--sal', '\(insets.left)px');
                 document.documentElement.style.setProperty('--sar', '\(insets.right)px');
-                // 直接修补使用 env() 的元素，因为 additionalSafeAreaInsets 取反后 env() 返回 0
                 document.querySelectorAll('.tab-bar').forEach(function(el) {
                     el.style.paddingBottom = Math.max(6, \(insets.bottom)) + 'px';
                 });
@@ -260,7 +278,6 @@ private struct ClipWebView: UIViewRepresentable {
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             print("[ClipView] 加载完成: \(webView.url?.absoluteString ?? "")")
-            // 页面加载完毕，强制重新注入 CSS 变量（防止 updateUIView 在页面未就绪时注入失败）
             lastInsets = .zero
             if let windowInsets = webView.window?.safeAreaInsets {
                 applySafeAreaInsets(windowInsets, to: webView)

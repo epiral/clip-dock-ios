@@ -7,7 +7,7 @@ import SwiftUI
 struct PinixShellApp: App {
     @StateObject private var clipsStore = ClipsStore()
     @State private var path = NavigationPath()
-    @State private var fullscreenClip: ClipConfig?
+    @State private var fullscreenClip: Bookmark?
     @State private var suppressList = false
 
     var body: some Scene {
@@ -23,7 +23,7 @@ struct PinixShellApp: App {
             }
             .environmentObject(clipsStore)
             .fullScreenCover(item: $fullscreenClip) { clip in
-                ClipView(config: clip, initialFullscreen: true)
+                ClipView(bookmark: clip, initialFullscreen: true)
             }
             .onOpenURL { url in
                 handleDeepLink(url)
@@ -32,11 +32,11 @@ struct PinixShellApp: App {
     }
 
     private func handleDeepLink(_ url: URL) {
-        // pinix://clip/[alias]?fullscreen=1
+        // pinix://clip/[name]?fullscreen=1
         guard url.scheme == "pinix",
               url.host == "clip",
-              let alias = url.pathComponents.dropFirst().first,
-              let clip = clipsStore.clips.first(where: { $0.alias == alias })
+              let clipName = url.pathComponents.dropFirst().first,
+              let clip = clipsStore.clips.first(where: { $0.name == clipName })
         else { return }
 
         let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
@@ -48,7 +48,7 @@ struct PinixShellApp: App {
             fullscreenClip = clip
         } else {
             path = NavigationPath()
-            path.append(ClipDestination(config: clip, fullscreen: false))
+            path.append(ClipDestination(bookmark: clip, fullscreen: false))
         }
     }
 }

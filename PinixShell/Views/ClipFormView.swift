@@ -1,17 +1,17 @@
 // ClipFormView.swift
-// Clip 添加/编辑表单 — alias、host、port、token 四个字段
+// Bookmark 添加/编辑表单 — name、server_url、token 三个字段
 
 import SwiftUI
 
 struct ClipFormView: View {
     enum Mode: Identifiable {
         case add
-        case edit(ClipConfig)
+        case edit(Bookmark)
 
         var id: String {
             switch self {
             case .add: return "__add__"
-            case .edit(let c): return c.id
+            case .edit(let b): return b.id
             }
         }
     }
@@ -21,9 +21,8 @@ struct ClipFormView: View {
     @EnvironmentObject private var store: ClipsStore
     @Environment(\.dismiss) private var dismiss
 
-    @State private var alias = ""
-    @State private var host = ""
-    @State private var portString = ""
+    @State private var name = ""
+    @State private var serverURL = ""
     @State private var token = ""
 
     private var isEditing: Bool {
@@ -32,21 +31,19 @@ struct ClipFormView: View {
     }
 
     private var title: String {
-        isEditing ? "编辑 Clip" : "添加 Clip"
+        isEditing ? "编辑 Bookmark" : "添加 Bookmark"
     }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("名称", text: $alias)
+                    TextField("名称", text: $name)
                         .autocorrectionDisabled()
-                    TextField("主机", text: $host)
+                    TextField("Server URL", text: $serverURL)
                         .keyboardType(.URL)
                         .autocapitalization(.none)
                         .autocorrectionDisabled()
-                    TextField("端口", text: $portString)
-                        .keyboardType(.numberPad)
                     SecureField("Token", text: $token)
                 }
             }
@@ -58,27 +55,25 @@ struct ClipFormView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("保存") { save() }
-                        .disabled(alias.isEmpty || host.isEmpty || portString.isEmpty)
+                        .disabled(name.isEmpty || serverURL.isEmpty)
                 }
             }
             .onAppear {
-                if case .edit(let clip) = mode {
-                    alias = clip.alias
-                    host = clip.host
-                    portString = String(clip.port)
-                    token = clip.token
+                if case .edit(let bookmark) = mode {
+                    name = bookmark.name
+                    serverURL = bookmark.server_url
+                    token = bookmark.token
                 }
             }
         }
     }
 
     private func save() {
-        let port = Int(portString) ?? 0
-        let clip = ClipConfig(alias: alias, host: host, port: port, token: token)
+        let bookmark = Bookmark(name: name, server_url: serverURL, token: token)
         if isEditing {
-            store.updateClip(clip)
+            store.updateClip(bookmark)
         } else {
-            store.addClip(clip)
+            store.addClip(bookmark)
         }
         dismiss()
     }

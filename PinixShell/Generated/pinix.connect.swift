@@ -86,6 +86,10 @@ internal protocol Pinix_V1_ClipServiceClientInterface: Sendable {
     /// 流式读取 workdir 下的文件
     @available(iOS 13, *)
     func `readFile`(headers: Connect.Headers) -> any Connect.ServerOnlyAsyncStreamInterface<Pinix_V1_ReadFileRequest, Pinix_V1_ReadFileChunk>
+
+    /// 返回 Clip 元信息
+    @available(iOS 13, *)
+    func `getInfo`(request: Pinix_V1_GetInfoRequest, headers: Connect.Headers) async -> ResponseMessage<Pinix_V1_GetInfoResponse>
 }
 
 /// Concrete implementation of `Pinix_V1_ClipServiceClientInterface`.
@@ -106,10 +110,16 @@ internal final class Pinix_V1_ClipServiceClient: Pinix_V1_ClipServiceClientInter
         return self.client.serverOnlyStream(path: "/pinix.v1.ClipService/ReadFile", headers: headers)
     }
 
+    @available(iOS 13, *)
+    internal func `getInfo`(request: Pinix_V1_GetInfoRequest, headers: Connect.Headers = [:]) async -> ResponseMessage<Pinix_V1_GetInfoResponse> {
+        return await self.client.unary(path: "/pinix.v1.ClipService/GetInfo", idempotencyLevel: .unknown, request: request, headers: headers)
+    }
+
     internal enum Metadata {
         internal enum Methods {
             internal static let invoke = Connect.MethodSpec(name: "Invoke", service: "pinix.v1.ClipService", type: .unary)
             internal static let readFile = Connect.MethodSpec(name: "ReadFile", service: "pinix.v1.ClipService", type: .serverStream)
+            internal static let getInfo = Connect.MethodSpec(name: "GetInfo", service: "pinix.v1.ClipService", type: .unary)
         }
     }
 }
