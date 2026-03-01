@@ -1,4 +1,4 @@
-// PinixWebSchemeHandler.swift
+// ClipDockWebSchemeHandler.swift
 // pinix-web:// URL Scheme — 通过 ClipService.ReadFile（server streaming）加载 {workdir}/web/ 下的文件
 //
 // URL 格式：pinix-web://clip-id/index.html → ReadFile(path: "web/index.html")
@@ -8,7 +8,7 @@ import WebKit
 import Connect
 
 @MainActor
-final class PinixWebSchemeHandler: NSObject, WKURLSchemeHandler {
+final class ClipDockWebSchemeHandler: NSObject, WKURLSchemeHandler {
 
     private let host: String
     private let token: String
@@ -191,7 +191,7 @@ final class PinixWebSchemeHandler: NSObject, WKURLSchemeHandler {
     // MARK: - 错误辅助
 
     private func makeError(_ message: String) -> NSError {
-        NSError(domain: "PinixWebScheme", code: -1,
+        NSError(domain: "ClipDockWebScheme", code: -1,
                 userInfo: [NSLocalizedDescriptionKey: message])
     }
 }

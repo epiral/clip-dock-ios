@@ -1,4 +1,4 @@
-name: PinixShell
+name: ClipDock
 options:
   bundleIdPrefix: com.epiral
   deploymentTarget:
@@ -14,14 +14,14 @@ packages:
     from: "1.28.0"
 
 targets:
-  PinixShell:
+  ClipDock:
     type: application
     platform: iOS
     sources:
-      - PinixShell
+      - ClipDock
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.epiral.pinix-shell
+        PRODUCT_BUNDLE_IDENTIFIER: com.epiral.clip-dock
         MARKETING_VERSION: "1.0.0"
         CURRENT_PROJECT_VERSION: "20"
         INFOPLIST_GENERATION_MODE: GeneratedFile
@@ -44,7 +44,7 @@ targets:
         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "Clip 需要访问相册以选择图片"
         INFOPLIST_KEY_NSHealthShareUsageDescription: "Clip 需要读取健康数据以展示健康指标"
     entitlements:
-      path: PinixShell/PinixShell.entitlements
+      path: ClipDock/ClipDock.entitlements
       properties:
         com.apple.developer.healthkit: true
     dependencies:

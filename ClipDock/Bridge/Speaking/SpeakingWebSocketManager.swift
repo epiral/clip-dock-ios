@@ -18,7 +18,7 @@ final class SpeakingWebSocketManager: NSObject {
 
     private var webSocket: URLSessionWebSocketTask?
     private var urlSession: URLSession?
-    private let log = Logger(subsystem: "com.epiral.pinix-shell", category: "SpeakingWS")
+    private let log = Logger(subsystem: "com.epiral.clip-dock", category: "SpeakingWS")
     private var isConnected = false
     private var isIntentionalDisconnect = false
     private var pingTimer: Timer?

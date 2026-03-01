@@ -17,9 +17,9 @@ final class SpeakingAudioManager {
     private var engine: AVAudioEngine?
     private var playerNode: AVAudioPlayerNode?
     private var inputNode: AVAudioInputNode?
-    private let log = Logger(subsystem: "com.epiral.pinix-shell", category: "SpeakingAudio")
+    private let log = Logger(subsystem: "com.epiral.clip-dock", category: "SpeakingAudio")
     private var isRecording = false
-    private let processingQueue = DispatchQueue(label: "com.epiral.pinix.speaking.audio", qos: .userInteractive)
+    private let processingQueue = DispatchQueue(label: "com.epiral.clip-dock.speaking.audio", qos: .userInteractive)
 
     private let playbackFormat: AVAudioFormat
 

@@ -10,12 +10,12 @@ final class DiskCache: Sendable {
 
     static let shared = DiskCache()
 
-    /// 根目录：Library/Caches/PinixShell/clips/
+    /// 根目录：Library/Caches/ClipDock/clips/
     private let rootURL: URL
 
     private init() {
         let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
-        rootURL = caches.appendingPathComponent("PinixShell/clips", isDirectory: true)
+        rootURL = caches.appendingPathComponent("ClipDock/clips", isDirectory: true)
     }
 
     // MARK: - pinix-web:// 强缓存

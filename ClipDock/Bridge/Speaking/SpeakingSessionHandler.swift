@@ -33,7 +33,7 @@ final class SpeakingSessionHandler {
     private var assistantBuffer = ""
     private var pendingReplyHandler: (@MainActor @Sendable (Any?, String?) -> Void)?
     private var pendingTopic: String?
-    private let log = Logger(subsystem: "com.epiral.pinix-shell", category: "SpeakingSession")
+    private let log = Logger(subsystem: "com.epiral.clip-dock", category: "SpeakingSession")
 
     func handle(
         action: String,

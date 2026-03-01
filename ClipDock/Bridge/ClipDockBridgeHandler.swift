@@ -1,14 +1,14 @@
-// PinixBridgeHandler.swift
-// Pinix Connect-RPC Bridge — 将 JS Bridge.invoke(action, payload) 映射到 ClipService.Invoke RPC
+// ClipDockBridgeHandler.swift
+// ClipDock Connect-RPC Bridge — 将 JS Bridge.invoke(action, payload) 映射到 ClipService.Invoke RPC
 //
 // Depends: Connect, PinixClient (gen), JSBridge
-// Exports: PinixBridgeHandler
+// Exports: ClipDockBridgeHandler
 
 import Foundation
 import Connect
 
 @MainActor
-final class PinixBridgeHandler {
+final class ClipDockBridgeHandler {
 
     static let actions: Set<String> = ["invoke"]
 
@@ -48,7 +48,7 @@ final class PinixBridgeHandler {
         case "invoke":
             handleInvoke(body: body, replyHandler: replyHandler)
         default:
-            replyHandler(nil, "PinixBridgeHandler: unknown action \(action)")
+            replyHandler(nil, "ClipDockBridgeHandler: unknown action \(action)")
         }
     }
 

@@ -1,4 +1,4 @@
-// PinixDataSchemeHandler.swift
+// ClipDockDataSchemeHandler.swift
 // pinix-data:// URL Scheme — 通过 ClipService.ReadFile（server streaming）读取 {workdir}/data/ 下的文件
 //
 // URL 格式：pinix-data://clip-id/voice.mp3 → ReadFile(path: "data/voice.mp3")
@@ -8,7 +8,7 @@ import WebKit
 import Connect
 
 @MainActor
-final class PinixDataSchemeHandler: NSObject, WKURLSchemeHandler {
+final class ClipDockDataSchemeHandler: NSObject, WKURLSchemeHandler {
 
     private let host: String
     private let token: String
@@ -292,7 +292,7 @@ final class PinixDataSchemeHandler: NSObject, WKURLSchemeHandler {
     // MARK: - 错误辅助
 
     private func makeError(_ message: String) -> NSError {
-        NSError(domain: "PinixDataScheme", code: -1,
+        NSError(domain: "ClipDockDataScheme", code: -1,
                 userInfo: [NSLocalizedDescriptionKey: message])
     }
 }

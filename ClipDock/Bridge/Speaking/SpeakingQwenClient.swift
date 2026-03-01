@@ -22,7 +22,7 @@ final class SpeakingQwenClient {
     weak var delegate: SpeakingQwenDelegate?
 
     private let ws = SpeakingWebSocketManager()
-    private let log = Logger(subsystem: "com.epiral.pinix-shell", category: "SpeakingQwen")
+    private let log = Logger(subsystem: "com.epiral.clip-dock", category: "SpeakingQwen")
     private var isResponding = false
 
     init() {

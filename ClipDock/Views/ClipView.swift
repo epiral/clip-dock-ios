@@ -184,11 +184,11 @@ private struct ClipWebView: UIViewRepresentable {
         let wkConfig = WKWebViewConfiguration()
 
         // 注册 pinix-web:// scheme handler（web 资源，带磁盘缓存）
-        let webHandler = PinixWebSchemeHandler(host: bookmark.server_url, token: bookmark.token, alias: bookmark.name)
+        let webHandler = ClipDockWebSchemeHandler(host: bookmark.server_url, token: bookmark.token, alias: bookmark.name)
         wkConfig.setURLSchemeHandler(webHandler, forURLScheme: "pinix-web")
 
         // 注册 pinix-data:// scheme handler（数据文件，ETag 协商缓存，支持 Range）
-        let dataHandler = PinixDataSchemeHandler(host: bookmark.server_url, token: bookmark.token, alias: bookmark.name)
+        let dataHandler = ClipDockDataSchemeHandler(host: bookmark.server_url, token: bookmark.token, alias: bookmark.name)
         wkConfig.setURLSchemeHandler(dataHandler, forURLScheme: "pinix-data")
 
         // 注册 JSBridge

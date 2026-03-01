@@ -1,10 +1,10 @@
-// PinixShellApp.swift
-// Pinix iOS Shell — Clip 运行时外壳
+// ClipDockApp.swift
+// ClipDock iOS — Clip 运行时外壳
 
 import SwiftUI
 
 @main
-struct PinixShellApp: App {
+struct ClipDockApp: App {
     @StateObject private var clipsStore = ClipsStore()
     @State private var path = NavigationPath()
     @State private var fullscreenClip: Bookmark?

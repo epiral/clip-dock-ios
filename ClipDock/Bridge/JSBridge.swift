@@ -2,7 +2,7 @@
 // 路由分发器 — 将 JS 消息分派到对应 Handler
 //
 // JS 调用方式：
-//   Bridge.invoke("invoke", { args: [...] })          → PinixBridgeHandler  (Pinix RPC)
+//   Bridge.invoke("invoke", { args: [...] })          → ClipDockBridgeHandler  (Pinix RPC)
 //   Bridge.invoke("ios.clipboardRead")                → IOSSystemBridgeHandler
 //   Bridge.invoke("ios.haptic", { style: "medium" })  → IOSSystemBridgeHandler
 //   Bridge.invoke("ios.locationGet")                  → IOSLocationBridgeHandler
@@ -22,7 +22,7 @@ import WebKit
 @MainActor
 final class JSBridge: NSObject, WKScriptMessageHandlerWithReply {
 
-    private let pinixHandler:   PinixBridgeHandler
+    private let pinixHandler:   ClipDockBridgeHandler
     private let iosSystem:      IOSSystemBridgeHandler
     private let iosLocation:    IOSLocationBridgeHandler
     private let iosMedia:       IOSMediaBridgeHandler
@@ -32,7 +32,7 @@ final class JSBridge: NSObject, WKScriptMessageHandlerWithReply {
     // MARK: - Init
 
     init(pinixHost: String = "", pinixToken: String = "") {
-        self.pinixHandler  = PinixBridgeHandler(host: pinixHost, token: pinixToken)
+        self.pinixHandler  = ClipDockBridgeHandler(host: pinixHost, token: pinixToken)
         self.iosSystem     = IOSSystemBridgeHandler()
         self.iosLocation   = IOSLocationBridgeHandler()
         self.iosMedia      = IOSMediaBridgeHandler()
@@ -98,7 +98,7 @@ final class JSBridge: NSObject, WKScriptMessageHandlerWithReply {
         }
 
         // 路由分发
-        if PinixBridgeHandler.actions.contains(action) {
+        if ClipDockBridgeHandler.actions.contains(action) {
             pinixHandler.handle(action: action, body: body, replyHandler: replyHandler)
         } else if IOSSystemBridgeHandler.actions.contains(action) {
             iosSystem.handle(action: action, body: body, replyHandler: replyHandler)
