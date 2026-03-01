@@ -79,9 +79,9 @@ internal final class Pinix_V1_PinixServiceClient: Pinix_V1_PinixServiceClientInt
 /// Clip Token 持有者使用，权限绑定特定 workdir
 internal protocol Pinix_V1_ClipServiceClientInterface: Sendable {
 
-    /// 执行 commands/ 下的可执行文件
+    /// 执行 commands/ 下的可执行文件（streaming stdout/stderr）
     @available(iOS 13, *)
-    func `invoke`(request: Pinix_V1_InvokeRequest, headers: Connect.Headers) async -> ResponseMessage<Pinix_V1_InvokeResponse>
+    func `invoke`(headers: Connect.Headers) -> any Connect.ServerOnlyAsyncStreamInterface<Pinix_V1_InvokeRequest, Pinix_V1_InvokeChunk>
 
     /// 流式读取 workdir 下的文件
     @available(iOS 13, *)
@@ -101,8 +101,8 @@ internal final class Pinix_V1_ClipServiceClient: Pinix_V1_ClipServiceClientInter
     }
 
     @available(iOS 13, *)
-    internal func `invoke`(request: Pinix_V1_InvokeRequest, headers: Connect.Headers = [:]) async -> ResponseMessage<Pinix_V1_InvokeResponse> {
-        return await self.client.unary(path: "/pinix.v1.ClipService/Invoke", idempotencyLevel: .unknown, request: request, headers: headers)
+    internal func `invoke`(headers: Connect.Headers = [:]) -> any Connect.ServerOnlyAsyncStreamInterface<Pinix_V1_InvokeRequest, Pinix_V1_InvokeChunk> {
+        return self.client.serverOnlyStream(path: "/pinix.v1.ClipService/Invoke", headers: headers)
     }
 
     @available(iOS 13, *)
@@ -117,7 +117,7 @@ internal final class Pinix_V1_ClipServiceClient: Pinix_V1_ClipServiceClientInter
 
     internal enum Metadata {
         internal enum Methods {
-            internal static let invoke = Connect.MethodSpec(name: "Invoke", service: "pinix.v1.ClipService", type: .unary)
+            internal static let invoke = Connect.MethodSpec(name: "Invoke", service: "pinix.v1.ClipService", type: .serverStream)
             internal static let readFile = Connect.MethodSpec(name: "ReadFile", service: "pinix.v1.ClipService", type: .serverStream)
             internal static let getInfo = Connect.MethodSpec(name: "GetInfo", service: "pinix.v1.ClipService", type: .unary)
         }

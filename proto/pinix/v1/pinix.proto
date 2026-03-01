@@ -20,8 +20,8 @@ service PinixService {
 // ─── ClipService ───────────────────────────────────────────────
 // Clip Token 持有者使用，权限绑定特定 workdir
 service ClipService {
-  // 执行 commands/ 下的可执行文件
-  rpc Invoke(InvokeRequest) returns (InvokeResponse);
+  // 执行 commands/ 下的可执行文件（streaming stdout/stderr）
+  rpc Invoke(InvokeRequest) returns (stream InvokeChunk);
 
   // 流式读取 workdir 下的文件
   rpc ReadFile(ReadFileRequest) returns (stream ReadFileChunk);
@@ -88,6 +88,14 @@ message InvokeResponse {
   string stdout    = 1;
   string stderr    = 2;
   int32  exit_code = 3;
+}
+
+message InvokeChunk {
+  oneof payload {
+    bytes stdout    = 1;
+    bytes stderr    = 2;
+    int32 exit_code = 3;  // final chunk — signals command completion
+  }
 }
 
 // ── ReadFile ──

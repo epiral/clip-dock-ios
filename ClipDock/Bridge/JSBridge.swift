@@ -2,7 +2,8 @@
 // 路由分发器 — 将 JS 消息分派到对应 Handler
 //
 // JS 调用方式：
-//   Bridge.invoke("invoke", { args: [...] })          → ClipDockBridgeHandler  (Pinix RPC)
+//   Bridge.invoke("invoke", { name, args, stdin })    → ClipDockBridgeHandler  (Pinix RPC，累积模式)
+//   Bridge.invokeStream(command, opts, onChunk, onDone) → ClipDockBridgeHandler  (Pinix RPC，流式)
 //   Bridge.invoke("ios.clipboardRead")                → IOSSystemBridgeHandler
 //   Bridge.invoke("ios.haptic", { style: "medium" })  → IOSSystemBridgeHandler
 //   Bridge.invoke("ios.locationGet")                  → IOSLocationBridgeHandler
@@ -13,8 +14,9 @@
 //   Bridge.invoke("ios.speakingStatus")                      → SpeakingSessionHandler
 //
 // 命名规约：
-//   "invoke"  — 通用 Pinix RPC 入口，无平台前缀
-//   "ios.*"   — iOS 平台专属能力，未来 Android/Desktop 自行实现同名不同前缀的版本
+//   "invoke"        — 通用 Pinix RPC 入口（累积），无平台前缀
+//   "invokeStream"  — 流式 Pinix RPC 入口，通过 streamId 回调 JS
+//   "ios.*"         — iOS 平台专属能力
 
 import Foundation
 import WebKit
@@ -70,8 +72,9 @@ final class JSBridge: NSObject, WKScriptMessageHandlerWithReply {
         pinixHandler.updateConfig(host: host, token: token)
     }
 
-    /// 绑定 WKWebView 引用（用于 SpeakingSessionHandler 推送事件到 JS）
+    /// 绑定 WKWebView 引用（用于 streaming 回调和 SpeakingSessionHandler 推送事件到 JS）
     func setWebView(_ webView: WKWebView) {
+        pinixHandler.webView = webView
         iosSpeaking.webView = webView
     }
 
@@ -117,10 +120,10 @@ final class JSBridge: NSObject, WKScriptMessageHandlerWithReply {
 
     // MARK: - 注入的辅助 JS
 
-    /// Bridge.invoke(action, payload?)
-    /// - action: string — handler 路由键，如 "invoke"、"ios.clipboardRead"
-    /// - payload: object — 透传给 handler 的参数（可选）
+    /// Bridge.invoke(action, payload?)  — 单次 RPC，返回 Promise
+    /// Bridge.invokeStream(command, opts, onChunk, onDone) — 流式 RPC，回调模式
     private static let bridgeHelperJS = """
+    window.__streamCallbacks = {};
     window.Bridge = {
         async invoke(action, payload) {
             var body = { action: action };
@@ -128,6 +131,18 @@ final class JSBridge: NSObject, WKScriptMessageHandlerWithReply {
                 Object.assign(body, payload);
             }
             return await window.webkit.messageHandlers.pinix.postMessage(body);
+        },
+        invokeStream: function(command, opts, onChunk, onDone) {
+            var streamId = 'stream_' + Date.now() + '_' + Math.random().toString(36).substr(2,9);
+            window.__streamCallbacks[streamId] = { onChunk: onChunk, onDone: onDone };
+            window.webkit.messageHandlers.pinix.postMessage({
+                action: 'invokeStream',
+                command: command,
+                streamId: streamId,
+                args: (opts && opts.args) || [],
+                stdin: (opts && opts.stdin) || ''
+            });
+            return streamId;
         }
     };
     """

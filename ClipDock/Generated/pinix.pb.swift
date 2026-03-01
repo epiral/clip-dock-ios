@@ -187,6 +187,24 @@ struct Pinix_V1_InvokeResponse: Sendable {
   init() {}
 }
 
+struct Pinix_V1_InvokeChunk: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var payload: OneOf_Payload? = nil
+
+  enum OneOf_Payload: Equatable, Sendable {
+    case stdout(Data)
+    case stderr(Data)
+    case exitCode(Int32)
+  }
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
 struct Pinix_V1_GetInfoRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -661,6 +679,62 @@ extension Pinix_V1_InvokeResponse: SwiftProtobuf.Message, SwiftProtobuf._Message
     if lhs.stdout != rhs.stdout {return false}
     if lhs.stderr != rhs.stderr {return false}
     if lhs.exitCode != rhs.exitCode {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Pinix_V1_InvokeChunk: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".InvokeChunk"
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}stdout\0\u{1}stderr\0\u{3}exit_code\0")
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      switch fieldNumber {
+      case 1: try {
+        var v: Data?
+        try decoder.decodeSingularBytesField(value: &v)
+        if let v = v {
+          if self.payload != nil { try decoder.handleConflictingOneOf() }
+          self.payload = .stdout(v)
+        }
+      }()
+      case 2: try {
+        var v: Data?
+        try decoder.decodeSingularBytesField(value: &v)
+        if let v = v {
+          if self.payload != nil { try decoder.handleConflictingOneOf() }
+          self.payload = .stderr(v)
+        }
+      }()
+      case 3: try {
+        var v: Int32?
+        try decoder.decodeSingularInt32Field(value: &v)
+        if let v = v {
+          if self.payload != nil { try decoder.handleConflictingOneOf() }
+          self.payload = .exitCode(v)
+        }
+      }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    switch self.payload {
+    case .stdout(let v)?:
+      try visitor.visitSingularBytesField(value: v, fieldNumber: 1)
+    case .stderr(let v)?:
+      try visitor.visitSingularBytesField(value: v, fieldNumber: 2)
+    case .exitCode(let v)?:
+      try visitor.visitSingularInt32Field(value: v, fieldNumber: 3)
+    case nil: break
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Pinix_V1_InvokeChunk, rhs: Pinix_V1_InvokeChunk) -> Bool {
+    if lhs.payload != rhs.payload {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
