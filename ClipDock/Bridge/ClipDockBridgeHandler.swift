@@ -39,7 +39,7 @@ final class ClipDockBridgeHandler {
             httpClient: URLSessionHTTPClient(),
             config: ProtocolClientConfig(
                 host: host,
-                networkProtocol: .connect,
+                networkProtocol: .grpcWeb,
                 codec: ProtoCodec()
             )
         )
