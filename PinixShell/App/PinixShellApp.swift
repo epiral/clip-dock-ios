@@ -32,8 +32,8 @@ struct PinixShellApp: App {
     }
 
     private func handleDeepLink(_ url: URL) {
-        // pinix://clip/[name]?fullscreen=1
-        guard url.scheme == "pinix",
+        // clip-dock://clip/[name]?fullscreen=1
+        guard url.scheme == "clip-dock",
               url.host == "clip",
               let clipName = url.pathComponents.dropFirst().first,
               let clip = clipsStore.clips.first(where: { $0.name == clipName })
