@@ -155,6 +155,7 @@ final class ClipDockBridgeHandler {
                 ) { client in
                     let clipService = Pinix_V1_ClipService.Client(wrapping: client)
                     try await clipService.invoke(request, metadata: metadata) { response in
+                        var doneEmitted = false
                         for try await chunk in response.messages {
                             switch chunk.payload {
                             case .stdout(let data):
@@ -169,6 +170,7 @@ final class ClipDockBridgeHandler {
                             case .stderr:
                                 break
                             case .exitCode(let code):
+                                doneEmitted = true
                                 await MainActor.run {
                                     webView?.evaluateJavaScript(
                                         "window.__streamCallbacks['\(streamId)']?.onDone(\(code)); delete window.__streamCallbacks['\(streamId)']",
@@ -177,6 +179,15 @@ final class ClipDockBridgeHandler {
                                 }
                             case nil:
                                 break
+                            }
+                        }
+                        // Fallback: guarantee onDone even if exitCode chunk was missing
+                        if !doneEmitted {
+                            await MainActor.run {
+                                webView?.evaluateJavaScript(
+                                    "window.__streamCallbacks['\(streamId)']?.onDone(0); delete window.__streamCallbacks['\(streamId)']",
+                                    completionHandler: nil
+                                )
                             }
                         }
                     }
