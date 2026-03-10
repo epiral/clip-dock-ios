@@ -120,15 +120,34 @@ final class JSBridge: NSObject, WKScriptMessageHandlerWithReply {
 
     // MARK: - 注入的辅助 JS
 
-    /// Bridge.invoke(action, payload?)  — 单次 RPC，返回 Promise
-    /// Bridge.invokeStream(command, opts, onChunk, onDone) — 流式 RPC，回调模式
+    /// Bridge API — matches Desktop (Electron) contract:
+    ///   Bridge.invoke(command, payload?)  → { stdout, stderr, exitCode }
+    ///   Bridge.invokeStream(command, opts, onChunk, onDone) → cancel()
+    ///
+    /// Routing:
+    ///   "ios.*" / known bridge actions → pass as action directly (platform API)
+    ///   everything else → wrap as Pinix ClipService.Invoke (command = name)
     private static let bridgeHelperJS = """
     window.__streamCallbacks = {};
+    window.__iosPlatformActions = new Set([
+        'invoke', 'invokeStream',
+        'ios.clipboardRead', 'ios.clipboardWrite', 'ios.haptic', 'ios.openURL', 'ios.share',
+        'ios.locationGet', 'ios.cameraCapture', 'ios.microphoneRecord',
+        'ios.healthQuery', 'ios.healthCorrelation',
+        'ios.speakingStart', 'ios.speakingStop', 'ios.speakingStatus'
+    ]);
     window.Bridge = {
-        async invoke(action, payload) {
-            var body = { action: action };
-            if (payload && typeof payload === 'object') {
-                Object.assign(body, payload);
+        async invoke(command, payload) {
+            var body;
+            if (window.__iosPlatformActions.has(command) || command.startsWith('ios.')) {
+                body = { action: command };
+                if (payload && typeof payload === 'object') Object.assign(body, payload);
+            } else {
+                body = { action: 'invoke', name: command };
+                if (payload && typeof payload === 'object') {
+                    if (payload.args) body.args = payload.args;
+                    if (payload.stdin) body.stdin = payload.stdin;
+                }
             }
             return await window.webkit.messageHandlers.pinix.postMessage(body);
         },
@@ -142,7 +161,7 @@ final class JSBridge: NSObject, WKScriptMessageHandlerWithReply {
                 args: (opts && opts.args) || [],
                 stdin: (opts && opts.stdin) || ''
             });
-            return streamId;
+            return function() { delete window.__streamCallbacks[streamId]; };
         }
     };
     """

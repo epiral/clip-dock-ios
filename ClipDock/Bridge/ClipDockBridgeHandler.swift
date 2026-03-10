@@ -60,6 +60,7 @@ final class ClipDockBridgeHandler {
             replyHandler(nil, "invoke: missing 'name'")
             return
         }
+        print("[ClipDock] invoke name=\(name) host=\(host) body=\(body)")
 
         let args = body["args"] as? [String] ?? []
         let stdin = body["stdin"] as? String ?? ""
@@ -105,6 +106,7 @@ final class ClipDockBridgeHandler {
                 ]
                 replyHandler(dict, nil)
             } catch {
+                print("[ClipDock] invoke ERROR: \(error)")
                 replyHandler(nil, "invoke error: \(error.localizedDescription)")
             }
         }
@@ -116,11 +118,24 @@ final class ClipDockBridgeHandler {
         body: [String: Any],
         replyHandler: @escaping @MainActor @Sendable (Any?, String?) -> Void
     ) {
-        guard let command = body["command"] as? String,
-              let streamId = body["streamId"] as? String else {
-            replyHandler(nil, "invokeStream: missing 'command' or 'streamId'")
+        guard let streamId = body["streamId"] as? String else {
+            replyHandler(nil, "invokeStream: missing 'streamId'")
             return
         }
+
+        // iOS 前端传 Bridge.invokeStream("invoke", {name: actualCmd, ...})
+        // Desktop 前端传 Bridge.invokeStream(actualCmd, {stdin, ...})
+        // 兼容两种：优先取 body["name"]，fallback 取 body["command"]
+        let commandName: String
+        if let name = body["name"] as? String {
+            commandName = name  // iOS 路径
+        } else if let cmd = body["command"] as? String {
+            commandName = cmd   // Desktop 路径
+        } else {
+            replyHandler(nil, "invokeStream: missing 'name' or 'command'")
+            return
+        }
+        print("[ClipDock] invokeStream name=\(commandName) streamId=\(streamId) host=\(host)")
 
         // 安全检查：streamId 只允许安全字符，防止 JS 注入
         let safe = streamId.allSatisfy { $0.isLetter || $0.isNumber || $0 == "_" }
@@ -136,7 +151,7 @@ final class ClipDockBridgeHandler {
         replyHandler(["streamId": streamId], nil)
 
         var request = Pinix_V1_InvokeRequest()
-        request.name = command
+        request.name = commandName
         request.args = args
         request.stdin = stdin
 
@@ -193,6 +208,7 @@ final class ClipDockBridgeHandler {
                     }
                 }
             } catch {
+                print("[ClipDock] invokeStream ERROR: \(error)")
                 await MainActor.run {
                     webView?.evaluateJavaScript(
                         "window.__streamCallbacks['\(streamId)']?.onDone(-1); delete window.__streamCallbacks['\(streamId)']",

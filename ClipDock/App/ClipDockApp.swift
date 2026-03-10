@@ -10,6 +10,14 @@ struct ClipDockApp: App {
     @State private var fullscreenClip: Bookmark?
     @State private var suppressList = false
 
+    init() {
+        // DEBUG: 清除所有 web 缓存，确保加载最新前端
+        let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        let clipsCacheDir = caches.appendingPathComponent("ClipDock/clips")
+        try? FileManager.default.removeItem(at: clipsCacheDir)
+        print("[ClipDock] web cache cleared")
+    }
+
     var body: some Scene {
         WindowGroup {
             ZStack {

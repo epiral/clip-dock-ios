@@ -41,6 +41,7 @@ final class ClipDockWebSchemeHandler: NSObject, WKURLSchemeHandler {
 
             // 转为 workdir 相对路径：直接去掉开头 /
             let relativePath = String(path.dropFirst())
+            print("[ClipDock:Web] loading: \(relativePath)")
 
             do {
                 // 1. 先检查磁盘缓存
