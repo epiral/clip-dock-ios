@@ -11,13 +11,13 @@
 import GRPCCore
 import GRPCProtobuf
 
-// MARK: - pinix.v1.PinixService
+// MARK: - pinix.v1.AdminService
 
-/// Namespace containing generated types for the "pinix.v1.PinixService" service.
+/// Namespace containing generated types for the "pinix.v1.AdminService" service.
 @available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
-internal enum Pinix_V1_PinixService: Sendable {
-    /// Service descriptor for the "pinix.v1.PinixService" service.
-    internal static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "pinix.v1.PinixService")
+internal enum Pinix_V1_AdminService: Sendable {
+    /// Service descriptor for the "pinix.v1.AdminService" service.
+    internal static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "pinix.v1.AdminService")
     /// Namespace for method metadata.
     internal enum Method: Sendable {
         /// Namespace for "CreateClip" metadata.
@@ -28,7 +28,7 @@ internal enum Pinix_V1_PinixService: Sendable {
             internal typealias Output = Pinix_V1_CreateClipResponse
             /// Descriptor for "CreateClip".
             internal static let descriptor = GRPCCore.MethodDescriptor(
-                service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "pinix.v1.PinixService"),
+                service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "pinix.v1.AdminService"),
                 method: "CreateClip"
             )
         }
@@ -40,7 +40,7 @@ internal enum Pinix_V1_PinixService: Sendable {
             internal typealias Output = Pinix_V1_ListClipsResponse
             /// Descriptor for "ListClips".
             internal static let descriptor = GRPCCore.MethodDescriptor(
-                service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "pinix.v1.PinixService"),
+                service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "pinix.v1.AdminService"),
                 method: "ListClips"
             )
         }
@@ -52,7 +52,7 @@ internal enum Pinix_V1_PinixService: Sendable {
             internal typealias Output = Pinix_V1_DeleteClipResponse
             /// Descriptor for "DeleteClip".
             internal static let descriptor = GRPCCore.MethodDescriptor(
-                service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "pinix.v1.PinixService"),
+                service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "pinix.v1.AdminService"),
                 method: "DeleteClip"
             )
         }
@@ -64,8 +64,20 @@ internal enum Pinix_V1_PinixService: Sendable {
             internal typealias Output = Pinix_V1_GenerateTokenResponse
             /// Descriptor for "GenerateToken".
             internal static let descriptor = GRPCCore.MethodDescriptor(
-                service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "pinix.v1.PinixService"),
+                service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "pinix.v1.AdminService"),
                 method: "GenerateToken"
+            )
+        }
+        /// Namespace for "ListTokens" metadata.
+        internal enum ListTokens: Sendable {
+            /// Request type for "ListTokens".
+            internal typealias Input = Pinix_V1_ListTokensRequest
+            /// Response type for "ListTokens".
+            internal typealias Output = Pinix_V1_ListTokensResponse
+            /// Descriptor for "ListTokens".
+            internal static let descriptor = GRPCCore.MethodDescriptor(
+                service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "pinix.v1.AdminService"),
+                method: "ListTokens"
             )
         }
         /// Namespace for "RevokeToken" metadata.
@@ -76,16 +88,17 @@ internal enum Pinix_V1_PinixService: Sendable {
             internal typealias Output = Pinix_V1_RevokeTokenResponse
             /// Descriptor for "RevokeToken".
             internal static let descriptor = GRPCCore.MethodDescriptor(
-                service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "pinix.v1.PinixService"),
+                service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "pinix.v1.AdminService"),
                 method: "RevokeToken"
             )
         }
-        /// Descriptors for all methods in the "pinix.v1.PinixService" service.
+        /// Descriptors for all methods in the "pinix.v1.AdminService" service.
         internal static let descriptors: [GRPCCore.MethodDescriptor] = [
             CreateClip.descriptor,
             ListClips.descriptor,
             DeleteClip.descriptor,
             GenerateToken.descriptor,
+            ListTokens.descriptor,
             RevokeToken.descriptor
         ]
     }
@@ -93,15 +106,15 @@ internal enum Pinix_V1_PinixService: Sendable {
 
 @available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
 extension GRPCCore.ServiceDescriptor {
-    /// Service descriptor for the "pinix.v1.PinixService" service.
-    internal static let pinix_v1_PinixService = GRPCCore.ServiceDescriptor(fullyQualifiedService: "pinix.v1.PinixService")
+    /// Service descriptor for the "pinix.v1.AdminService" service.
+    internal static let pinix_v1_AdminService = GRPCCore.ServiceDescriptor(fullyQualifiedService: "pinix.v1.AdminService")
 }
 
-// MARK: pinix.v1.PinixService (server)
+// MARK: pinix.v1.AdminService (server)
 
 @available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
-extension Pinix_V1_PinixService {
-    /// Streaming variant of the service protocol for the "pinix.v1.PinixService" service.
+extension Pinix_V1_AdminService {
+    /// Streaming variant of the service protocol for the "pinix.v1.AdminService" service.
     ///
     /// This protocol is the lowest-level of the service protocols generated for this service
     /// giving you the most flexibility over the implementation of your service. This comes at
@@ -114,14 +127,14 @@ extension Pinix_V1_PinixService {
     ///
     /// > Source IDL Documentation:
     /// >
-    /// > ─── PinixService ──────────────────────────────────────────────
-    /// > Super Agent Token 持有者使用，拥有整机权限
+    /// > ─── AdminService ─────────────────────────────────────────────
+    /// > Super Token holders only. Manages clips and tokens on the server.
     internal protocol StreamingServiceProtocol: GRPCCore.RegistrableRPCService {
         /// Handle the "CreateClip" method.
         ///
         /// > Source IDL Documentation:
         /// >
-        /// > 管理 Clip
+        /// > Clip management
         ///
         /// - Parameters:
         ///   - request: A streaming request of `Pinix_V1_CreateClipRequest` messages.
@@ -167,7 +180,7 @@ extension Pinix_V1_PinixService {
         ///
         /// > Source IDL Documentation:
         /// >
-        /// > 管理 Token
+        /// > Token management
         ///
         /// - Parameters:
         ///   - request: A streaming request of `Pinix_V1_GenerateTokenRequest` messages.
@@ -180,6 +193,20 @@ extension Pinix_V1_PinixService {
             request: GRPCCore.StreamingServerRequest<Pinix_V1_GenerateTokenRequest>,
             context: GRPCCore.ServerContext
         ) async throws -> GRPCCore.StreamingServerResponse<Pinix_V1_GenerateTokenResponse>
+
+        /// Handle the "ListTokens" method.
+        ///
+        /// - Parameters:
+        ///   - request: A streaming request of `Pinix_V1_ListTokensRequest` messages.
+        ///   - context: Context providing information about the RPC.
+        /// - Throws: Any error which occurred during the processing of the request. Thrown errors
+        ///     of type `RPCError` are mapped to appropriate statuses. All other errors are converted
+        ///     to an internal error.
+        /// - Returns: A streaming response of `Pinix_V1_ListTokensResponse` messages.
+        func listTokens(
+            request: GRPCCore.StreamingServerRequest<Pinix_V1_ListTokensRequest>,
+            context: GRPCCore.ServerContext
+        ) async throws -> GRPCCore.StreamingServerResponse<Pinix_V1_ListTokensResponse>
 
         /// Handle the "RevokeToken" method.
         ///
@@ -196,7 +223,7 @@ extension Pinix_V1_PinixService {
         ) async throws -> GRPCCore.StreamingServerResponse<Pinix_V1_RevokeTokenResponse>
     }
 
-    /// Service protocol for the "pinix.v1.PinixService" service.
+    /// Service protocol for the "pinix.v1.AdminService" service.
     ///
     /// This protocol is higher level than ``StreamingServiceProtocol`` but lower level than
     /// the ``SimpleServiceProtocol``, it provides access to request and response metadata and
@@ -206,14 +233,14 @@ extension Pinix_V1_PinixService {
     ///
     /// > Source IDL Documentation:
     /// >
-    /// > ─── PinixService ──────────────────────────────────────────────
-    /// > Super Agent Token 持有者使用，拥有整机权限
-    internal protocol ServiceProtocol: Pinix_V1_PinixService.StreamingServiceProtocol {
+    /// > ─── AdminService ─────────────────────────────────────────────
+    /// > Super Token holders only. Manages clips and tokens on the server.
+    internal protocol ServiceProtocol: Pinix_V1_AdminService.StreamingServiceProtocol {
         /// Handle the "CreateClip" method.
         ///
         /// > Source IDL Documentation:
         /// >
-        /// > 管理 Clip
+        /// > Clip management
         ///
         /// - Parameters:
         ///   - request: A request containing a single `Pinix_V1_CreateClipRequest` message.
@@ -259,7 +286,7 @@ extension Pinix_V1_PinixService {
         ///
         /// > Source IDL Documentation:
         /// >
-        /// > 管理 Token
+        /// > Token management
         ///
         /// - Parameters:
         ///   - request: A request containing a single `Pinix_V1_GenerateTokenRequest` message.
@@ -272,6 +299,20 @@ extension Pinix_V1_PinixService {
             request: GRPCCore.ServerRequest<Pinix_V1_GenerateTokenRequest>,
             context: GRPCCore.ServerContext
         ) async throws -> GRPCCore.ServerResponse<Pinix_V1_GenerateTokenResponse>
+
+        /// Handle the "ListTokens" method.
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `Pinix_V1_ListTokensRequest` message.
+        ///   - context: Context providing information about the RPC.
+        /// - Throws: Any error which occurred during the processing of the request. Thrown errors
+        ///     of type `RPCError` are mapped to appropriate statuses. All other errors are converted
+        ///     to an internal error.
+        /// - Returns: A response containing a single `Pinix_V1_ListTokensResponse` message.
+        func listTokens(
+            request: GRPCCore.ServerRequest<Pinix_V1_ListTokensRequest>,
+            context: GRPCCore.ServerContext
+        ) async throws -> GRPCCore.ServerResponse<Pinix_V1_ListTokensResponse>
 
         /// Handle the "RevokeToken" method.
         ///
@@ -288,7 +329,7 @@ extension Pinix_V1_PinixService {
         ) async throws -> GRPCCore.ServerResponse<Pinix_V1_RevokeTokenResponse>
     }
 
-    /// Simple service protocol for the "pinix.v1.PinixService" service.
+    /// Simple service protocol for the "pinix.v1.AdminService" service.
     ///
     /// This is the highest level protocol for the service. The API is the easiest to use but
     /// doesn't provide access to request or response metadata. If you need access to these
@@ -296,14 +337,14 @@ extension Pinix_V1_PinixService {
     ///
     /// > Source IDL Documentation:
     /// >
-    /// > ─── PinixService ──────────────────────────────────────────────
-    /// > Super Agent Token 持有者使用，拥有整机权限
-    internal protocol SimpleServiceProtocol: Pinix_V1_PinixService.ServiceProtocol {
+    /// > ─── AdminService ─────────────────────────────────────────────
+    /// > Super Token holders only. Manages clips and tokens on the server.
+    internal protocol SimpleServiceProtocol: Pinix_V1_AdminService.ServiceProtocol {
         /// Handle the "CreateClip" method.
         ///
         /// > Source IDL Documentation:
         /// >
-        /// > 管理 Clip
+        /// > Clip management
         ///
         /// - Parameters:
         ///   - request: A `Pinix_V1_CreateClipRequest` message.
@@ -349,7 +390,7 @@ extension Pinix_V1_PinixService {
         ///
         /// > Source IDL Documentation:
         /// >
-        /// > 管理 Token
+        /// > Token management
         ///
         /// - Parameters:
         ///   - request: A `Pinix_V1_GenerateTokenRequest` message.
@@ -362,6 +403,20 @@ extension Pinix_V1_PinixService {
             request: Pinix_V1_GenerateTokenRequest,
             context: GRPCCore.ServerContext
         ) async throws -> Pinix_V1_GenerateTokenResponse
+
+        /// Handle the "ListTokens" method.
+        ///
+        /// - Parameters:
+        ///   - request: A `Pinix_V1_ListTokensRequest` message.
+        ///   - context: Context providing information about the RPC.
+        /// - Throws: Any error which occurred during the processing of the request. Thrown errors
+        ///     of type `RPCError` are mapped to appropriate statuses. All other errors are converted
+        ///     to an internal error.
+        /// - Returns: A `Pinix_V1_ListTokensResponse` to respond with.
+        func listTokens(
+            request: Pinix_V1_ListTokensRequest,
+            context: GRPCCore.ServerContext
+        ) async throws -> Pinix_V1_ListTokensResponse
 
         /// Handle the "RevokeToken" method.
         ///
@@ -381,10 +436,10 @@ extension Pinix_V1_PinixService {
 
 // Default implementation of 'registerMethods(with:)'.
 @available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
-extension Pinix_V1_PinixService.StreamingServiceProtocol {
+extension Pinix_V1_AdminService.StreamingServiceProtocol {
     internal func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
         router.registerHandler(
-            forMethod: Pinix_V1_PinixService.Method.CreateClip.descriptor,
+            forMethod: Pinix_V1_AdminService.Method.CreateClip.descriptor,
             deserializer: GRPCProtobuf.ProtobufDeserializer<Pinix_V1_CreateClipRequest>(),
             serializer: GRPCProtobuf.ProtobufSerializer<Pinix_V1_CreateClipResponse>(),
             handler: { request, context in
@@ -395,7 +450,7 @@ extension Pinix_V1_PinixService.StreamingServiceProtocol {
             }
         )
         router.registerHandler(
-            forMethod: Pinix_V1_PinixService.Method.ListClips.descriptor,
+            forMethod: Pinix_V1_AdminService.Method.ListClips.descriptor,
             deserializer: GRPCProtobuf.ProtobufDeserializer<Pinix_V1_ListClipsRequest>(),
             serializer: GRPCProtobuf.ProtobufSerializer<Pinix_V1_ListClipsResponse>(),
             handler: { request, context in
@@ -406,7 +461,7 @@ extension Pinix_V1_PinixService.StreamingServiceProtocol {
             }
         )
         router.registerHandler(
-            forMethod: Pinix_V1_PinixService.Method.DeleteClip.descriptor,
+            forMethod: Pinix_V1_AdminService.Method.DeleteClip.descriptor,
             deserializer: GRPCProtobuf.ProtobufDeserializer<Pinix_V1_DeleteClipRequest>(),
             serializer: GRPCProtobuf.ProtobufSerializer<Pinix_V1_DeleteClipResponse>(),
             handler: { request, context in
@@ -417,7 +472,7 @@ extension Pinix_V1_PinixService.StreamingServiceProtocol {
             }
         )
         router.registerHandler(
-            forMethod: Pinix_V1_PinixService.Method.GenerateToken.descriptor,
+            forMethod: Pinix_V1_AdminService.Method.GenerateToken.descriptor,
             deserializer: GRPCProtobuf.ProtobufDeserializer<Pinix_V1_GenerateTokenRequest>(),
             serializer: GRPCProtobuf.ProtobufSerializer<Pinix_V1_GenerateTokenResponse>(),
             handler: { request, context in
@@ -428,7 +483,18 @@ extension Pinix_V1_PinixService.StreamingServiceProtocol {
             }
         )
         router.registerHandler(
-            forMethod: Pinix_V1_PinixService.Method.RevokeToken.descriptor,
+            forMethod: Pinix_V1_AdminService.Method.ListTokens.descriptor,
+            deserializer: GRPCProtobuf.ProtobufDeserializer<Pinix_V1_ListTokensRequest>(),
+            serializer: GRPCProtobuf.ProtobufSerializer<Pinix_V1_ListTokensResponse>(),
+            handler: { request, context in
+                try await self.listTokens(
+                    request: request,
+                    context: context
+                )
+            }
+        )
+        router.registerHandler(
+            forMethod: Pinix_V1_AdminService.Method.RevokeToken.descriptor,
             deserializer: GRPCProtobuf.ProtobufDeserializer<Pinix_V1_RevokeTokenRequest>(),
             serializer: GRPCProtobuf.ProtobufSerializer<Pinix_V1_RevokeTokenResponse>(),
             handler: { request, context in
@@ -443,7 +509,7 @@ extension Pinix_V1_PinixService.StreamingServiceProtocol {
 
 // Default implementation of streaming methods from 'StreamingServiceProtocol'.
 @available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
-extension Pinix_V1_PinixService.ServiceProtocol {
+extension Pinix_V1_AdminService.ServiceProtocol {
     internal func createClip(
         request: GRPCCore.StreamingServerRequest<Pinix_V1_CreateClipRequest>,
         context: GRPCCore.ServerContext
@@ -488,6 +554,17 @@ extension Pinix_V1_PinixService.ServiceProtocol {
         return GRPCCore.StreamingServerResponse(single: response)
     }
 
+    internal func listTokens(
+        request: GRPCCore.StreamingServerRequest<Pinix_V1_ListTokensRequest>,
+        context: GRPCCore.ServerContext
+    ) async throws -> GRPCCore.StreamingServerResponse<Pinix_V1_ListTokensResponse> {
+        let response = try await self.listTokens(
+            request: GRPCCore.ServerRequest(stream: request),
+            context: context
+        )
+        return GRPCCore.StreamingServerResponse(single: response)
+    }
+
     internal func revokeToken(
         request: GRPCCore.StreamingServerRequest<Pinix_V1_RevokeTokenRequest>,
         context: GRPCCore.ServerContext
@@ -502,7 +579,7 @@ extension Pinix_V1_PinixService.ServiceProtocol {
 
 // Default implementation of methods from 'ServiceProtocol'.
 @available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
-extension Pinix_V1_PinixService.SimpleServiceProtocol {
+extension Pinix_V1_AdminService.SimpleServiceProtocol {
     internal func createClip(
         request: GRPCCore.ServerRequest<Pinix_V1_CreateClipRequest>,
         context: GRPCCore.ServerContext
@@ -555,6 +632,19 @@ extension Pinix_V1_PinixService.SimpleServiceProtocol {
         )
     }
 
+    internal func listTokens(
+        request: GRPCCore.ServerRequest<Pinix_V1_ListTokensRequest>,
+        context: GRPCCore.ServerContext
+    ) async throws -> GRPCCore.ServerResponse<Pinix_V1_ListTokensResponse> {
+        return GRPCCore.ServerResponse<Pinix_V1_ListTokensResponse>(
+            message: try await self.listTokens(
+                request: request.message,
+                context: context
+            ),
+            metadata: [:]
+        )
+    }
+
     internal func revokeToken(
         request: GRPCCore.ServerRequest<Pinix_V1_RevokeTokenRequest>,
         context: GRPCCore.ServerContext
@@ -569,25 +659,25 @@ extension Pinix_V1_PinixService.SimpleServiceProtocol {
     }
 }
 
-// MARK: pinix.v1.PinixService (client)
+// MARK: pinix.v1.AdminService (client)
 
 @available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
-extension Pinix_V1_PinixService {
-    /// Generated client protocol for the "pinix.v1.PinixService" service.
+extension Pinix_V1_AdminService {
+    /// Generated client protocol for the "pinix.v1.AdminService" service.
     ///
     /// You don't need to implement this protocol directly, use the generated
     /// implementation, ``Client``.
     ///
     /// > Source IDL Documentation:
     /// >
-    /// > ─── PinixService ──────────────────────────────────────────────
-    /// > Super Agent Token 持有者使用，拥有整机权限
+    /// > ─── AdminService ─────────────────────────────────────────────
+    /// > Super Token holders only. Manages clips and tokens on the server.
     internal protocol ClientProtocol: Sendable {
         /// Call the "CreateClip" method.
         ///
         /// > Source IDL Documentation:
         /// >
-        /// > 管理 Clip
+        /// > Clip management
         ///
         /// - Parameters:
         ///   - request: A request containing a single `Pinix_V1_CreateClipRequest` message.
@@ -648,7 +738,7 @@ extension Pinix_V1_PinixService {
         ///
         /// > Source IDL Documentation:
         /// >
-        /// > 管理 Token
+        /// > Token management
         ///
         /// - Parameters:
         ///   - request: A request containing a single `Pinix_V1_GenerateTokenRequest` message.
@@ -665,6 +755,25 @@ extension Pinix_V1_PinixService {
             deserializer: some GRPCCore.MessageDeserializer<Pinix_V1_GenerateTokenResponse>,
             options: GRPCCore.CallOptions,
             onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<Pinix_V1_GenerateTokenResponse>) async throws -> Result
+        ) async throws -> Result where Result: Sendable
+
+        /// Call the "ListTokens" method.
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `Pinix_V1_ListTokensRequest` message.
+        ///   - serializer: A serializer for `Pinix_V1_ListTokensRequest` messages.
+        ///   - deserializer: A deserializer for `Pinix_V1_ListTokensResponse` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        func listTokens<Result>(
+            request: GRPCCore.ClientRequest<Pinix_V1_ListTokensRequest>,
+            serializer: some GRPCCore.MessageSerializer<Pinix_V1_ListTokensRequest>,
+            deserializer: some GRPCCore.MessageDeserializer<Pinix_V1_ListTokensResponse>,
+            options: GRPCCore.CallOptions,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<Pinix_V1_ListTokensResponse>) async throws -> Result
         ) async throws -> Result where Result: Sendable
 
         /// Call the "RevokeToken" method.
@@ -687,7 +796,7 @@ extension Pinix_V1_PinixService {
         ) async throws -> Result where Result: Sendable
     }
 
-    /// Generated client for the "pinix.v1.PinixService" service.
+    /// Generated client for the "pinix.v1.AdminService" service.
     ///
     /// The ``Client`` provides an implementation of ``ClientProtocol`` which wraps
     /// a `GRPCCore.GRPCCClient`. The underlying `GRPCClient` provides the long-lived
@@ -695,8 +804,8 @@ extension Pinix_V1_PinixService {
     ///
     /// > Source IDL Documentation:
     /// >
-    /// > ─── PinixService ──────────────────────────────────────────────
-    /// > Super Agent Token 持有者使用，拥有整机权限
+    /// > ─── AdminService ─────────────────────────────────────────────
+    /// > Super Token holders only. Manages clips and tokens on the server.
     internal struct Client<Transport>: ClientProtocol where Transport: GRPCCore.ClientTransport {
         private let client: GRPCCore.GRPCClient<Transport>
 
@@ -712,7 +821,7 @@ extension Pinix_V1_PinixService {
         ///
         /// > Source IDL Documentation:
         /// >
-        /// > 管理 Clip
+        /// > Clip management
         ///
         /// - Parameters:
         ///   - request: A request containing a single `Pinix_V1_CreateClipRequest` message.
@@ -734,7 +843,7 @@ extension Pinix_V1_PinixService {
         ) async throws -> Result where Result: Sendable {
             try await self.client.unary(
                 request: request,
-                descriptor: Pinix_V1_PinixService.Method.CreateClip.descriptor,
+                descriptor: Pinix_V1_AdminService.Method.CreateClip.descriptor,
                 serializer: serializer,
                 deserializer: deserializer,
                 options: options,
@@ -764,7 +873,7 @@ extension Pinix_V1_PinixService {
         ) async throws -> Result where Result: Sendable {
             try await self.client.unary(
                 request: request,
-                descriptor: Pinix_V1_PinixService.Method.ListClips.descriptor,
+                descriptor: Pinix_V1_AdminService.Method.ListClips.descriptor,
                 serializer: serializer,
                 deserializer: deserializer,
                 options: options,
@@ -794,7 +903,7 @@ extension Pinix_V1_PinixService {
         ) async throws -> Result where Result: Sendable {
             try await self.client.unary(
                 request: request,
-                descriptor: Pinix_V1_PinixService.Method.DeleteClip.descriptor,
+                descriptor: Pinix_V1_AdminService.Method.DeleteClip.descriptor,
                 serializer: serializer,
                 deserializer: deserializer,
                 options: options,
@@ -806,7 +915,7 @@ extension Pinix_V1_PinixService {
         ///
         /// > Source IDL Documentation:
         /// >
-        /// > 管理 Token
+        /// > Token management
         ///
         /// - Parameters:
         ///   - request: A request containing a single `Pinix_V1_GenerateTokenRequest` message.
@@ -828,7 +937,37 @@ extension Pinix_V1_PinixService {
         ) async throws -> Result where Result: Sendable {
             try await self.client.unary(
                 request: request,
-                descriptor: Pinix_V1_PinixService.Method.GenerateToken.descriptor,
+                descriptor: Pinix_V1_AdminService.Method.GenerateToken.descriptor,
+                serializer: serializer,
+                deserializer: deserializer,
+                options: options,
+                onResponse: handleResponse
+            )
+        }
+
+        /// Call the "ListTokens" method.
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `Pinix_V1_ListTokensRequest` message.
+        ///   - serializer: A serializer for `Pinix_V1_ListTokensRequest` messages.
+        ///   - deserializer: A deserializer for `Pinix_V1_ListTokensResponse` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        internal func listTokens<Result>(
+            request: GRPCCore.ClientRequest<Pinix_V1_ListTokensRequest>,
+            serializer: some GRPCCore.MessageSerializer<Pinix_V1_ListTokensRequest>,
+            deserializer: some GRPCCore.MessageDeserializer<Pinix_V1_ListTokensResponse>,
+            options: GRPCCore.CallOptions = .defaults,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<Pinix_V1_ListTokensResponse>) async throws -> Result = { response in
+                try response.message
+            }
+        ) async throws -> Result where Result: Sendable {
+            try await self.client.unary(
+                request: request,
+                descriptor: Pinix_V1_AdminService.Method.ListTokens.descriptor,
                 serializer: serializer,
                 deserializer: deserializer,
                 options: options,
@@ -858,7 +997,7 @@ extension Pinix_V1_PinixService {
         ) async throws -> Result where Result: Sendable {
             try await self.client.unary(
                 request: request,
-                descriptor: Pinix_V1_PinixService.Method.RevokeToken.descriptor,
+                descriptor: Pinix_V1_AdminService.Method.RevokeToken.descriptor,
                 serializer: serializer,
                 deserializer: deserializer,
                 options: options,
@@ -870,12 +1009,12 @@ extension Pinix_V1_PinixService {
 
 // Helpers providing default arguments to 'ClientProtocol' methods.
 @available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
-extension Pinix_V1_PinixService.ClientProtocol {
+extension Pinix_V1_AdminService.ClientProtocol {
     /// Call the "CreateClip" method.
     ///
     /// > Source IDL Documentation:
     /// >
-    /// > 管理 Clip
+    /// > Clip management
     ///
     /// - Parameters:
     ///   - request: A request containing a single `Pinix_V1_CreateClipRequest` message.
@@ -954,7 +1093,7 @@ extension Pinix_V1_PinixService.ClientProtocol {
     ///
     /// > Source IDL Documentation:
     /// >
-    /// > 管理 Token
+    /// > Token management
     ///
     /// - Parameters:
     ///   - request: A request containing a single `Pinix_V1_GenerateTokenRequest` message.
@@ -974,6 +1113,31 @@ extension Pinix_V1_PinixService.ClientProtocol {
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<Pinix_V1_GenerateTokenRequest>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<Pinix_V1_GenerateTokenResponse>(),
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+
+    /// Call the "ListTokens" method.
+    ///
+    /// - Parameters:
+    ///   - request: A request containing a single `Pinix_V1_ListTokensRequest` message.
+    ///   - options: Options to apply to this RPC.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func listTokens<Result>(
+        request: GRPCCore.ClientRequest<Pinix_V1_ListTokensRequest>,
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<Pinix_V1_ListTokensResponse>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        try await self.listTokens(
+            request: request,
+            serializer: GRPCProtobuf.ProtobufSerializer<Pinix_V1_ListTokensRequest>(),
+            deserializer: GRPCProtobuf.ProtobufDeserializer<Pinix_V1_ListTokensResponse>(),
             options: options,
             onResponse: handleResponse
         )
@@ -1007,12 +1171,12 @@ extension Pinix_V1_PinixService.ClientProtocol {
 
 // Helpers providing sugared APIs for 'ClientProtocol' methods.
 @available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
-extension Pinix_V1_PinixService.ClientProtocol {
+extension Pinix_V1_AdminService.ClientProtocol {
     /// Call the "CreateClip" method.
     ///
     /// > Source IDL Documentation:
     /// >
-    /// > 管理 Clip
+    /// > Clip management
     ///
     /// - Parameters:
     ///   - message: request message to send.
@@ -1103,7 +1267,7 @@ extension Pinix_V1_PinixService.ClientProtocol {
     ///
     /// > Source IDL Documentation:
     /// >
-    /// > 管理 Token
+    /// > Token management
     ///
     /// - Parameters:
     ///   - message: request message to send.
@@ -1126,6 +1290,35 @@ extension Pinix_V1_PinixService.ClientProtocol {
             metadata: metadata
         )
         return try await self.generateToken(
+            request: request,
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+
+    /// Call the "ListTokens" method.
+    ///
+    /// - Parameters:
+    ///   - message: request message to send.
+    ///   - metadata: Additional metadata to send, defaults to empty.
+    ///   - options: Options to apply to this RPC, defaults to `.defaults`.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func listTokens<Result>(
+        _ message: Pinix_V1_ListTokensRequest,
+        metadata: GRPCCore.Metadata = [:],
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<Pinix_V1_ListTokensResponse>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        let request = GRPCCore.ClientRequest<Pinix_V1_ListTokensRequest>(
+            message: message,
+            metadata: metadata
+        )
+        return try await self.listTokens(
             request: request,
             options: options,
             onResponse: handleResponse
@@ -1239,14 +1432,14 @@ extension Pinix_V1_ClipService {
     ///
     /// > Source IDL Documentation:
     /// >
-    /// > ─── ClipService ───────────────────────────────────────────────
-    /// > Clip Token 持有者使用，权限绑定特定 workdir
+    /// > ─── ClipService ──────────────────────────────────────────────
+    /// > Clip Token holders. Scoped to a single clip's workdir.
     internal protocol StreamingServiceProtocol: GRPCCore.RegistrableRPCService {
         /// Handle the "Invoke" method.
         ///
         /// > Source IDL Documentation:
         /// >
-        /// > 执行 commands/ 下的可执行文件（streaming stdout/stderr）
+        /// > Execute a command script under commands/ (streaming stdout/stderr)
         ///
         /// - Parameters:
         ///   - request: A streaming request of `Pinix_V1_InvokeRequest` messages.
@@ -1264,7 +1457,7 @@ extension Pinix_V1_ClipService {
         ///
         /// > Source IDL Documentation:
         /// >
-        /// > 流式读取 workdir 下的文件
+        /// > Stream-read a file under web/ or data/
         ///
         /// - Parameters:
         ///   - request: A streaming request of `Pinix_V1_ReadFileRequest` messages.
@@ -1282,7 +1475,7 @@ extension Pinix_V1_ClipService {
         ///
         /// > Source IDL Documentation:
         /// >
-        /// > 返回 Clip 元信息
+        /// > Return clip metadata (name, description, commands, has_web)
         ///
         /// - Parameters:
         ///   - request: A streaming request of `Pinix_V1_GetInfoRequest` messages.
@@ -1307,14 +1500,14 @@ extension Pinix_V1_ClipService {
     ///
     /// > Source IDL Documentation:
     /// >
-    /// > ─── ClipService ───────────────────────────────────────────────
-    /// > Clip Token 持有者使用，权限绑定特定 workdir
+    /// > ─── ClipService ──────────────────────────────────────────────
+    /// > Clip Token holders. Scoped to a single clip's workdir.
     internal protocol ServiceProtocol: Pinix_V1_ClipService.StreamingServiceProtocol {
         /// Handle the "Invoke" method.
         ///
         /// > Source IDL Documentation:
         /// >
-        /// > 执行 commands/ 下的可执行文件（streaming stdout/stderr）
+        /// > Execute a command script under commands/ (streaming stdout/stderr)
         ///
         /// - Parameters:
         ///   - request: A request containing a single `Pinix_V1_InvokeRequest` message.
@@ -1332,7 +1525,7 @@ extension Pinix_V1_ClipService {
         ///
         /// > Source IDL Documentation:
         /// >
-        /// > 流式读取 workdir 下的文件
+        /// > Stream-read a file under web/ or data/
         ///
         /// - Parameters:
         ///   - request: A request containing a single `Pinix_V1_ReadFileRequest` message.
@@ -1350,7 +1543,7 @@ extension Pinix_V1_ClipService {
         ///
         /// > Source IDL Documentation:
         /// >
-        /// > 返回 Clip 元信息
+        /// > Return clip metadata (name, description, commands, has_web)
         ///
         /// - Parameters:
         ///   - request: A request containing a single `Pinix_V1_GetInfoRequest` message.
@@ -1373,14 +1566,14 @@ extension Pinix_V1_ClipService {
     ///
     /// > Source IDL Documentation:
     /// >
-    /// > ─── ClipService ───────────────────────────────────────────────
-    /// > Clip Token 持有者使用，权限绑定特定 workdir
+    /// > ─── ClipService ──────────────────────────────────────────────
+    /// > Clip Token holders. Scoped to a single clip's workdir.
     internal protocol SimpleServiceProtocol: Pinix_V1_ClipService.ServiceProtocol {
         /// Handle the "Invoke" method.
         ///
         /// > Source IDL Documentation:
         /// >
-        /// > 执行 commands/ 下的可执行文件（streaming stdout/stderr）
+        /// > Execute a command script under commands/ (streaming stdout/stderr)
         ///
         /// - Parameters:
         ///   - request: A `Pinix_V1_InvokeRequest` message.
@@ -1399,7 +1592,7 @@ extension Pinix_V1_ClipService {
         ///
         /// > Source IDL Documentation:
         /// >
-        /// > 流式读取 workdir 下的文件
+        /// > Stream-read a file under web/ or data/
         ///
         /// - Parameters:
         ///   - request: A `Pinix_V1_ReadFileRequest` message.
@@ -1418,7 +1611,7 @@ extension Pinix_V1_ClipService {
         ///
         /// > Source IDL Documentation:
         /// >
-        /// > 返回 Clip 元信息
+        /// > Return clip metadata (name, description, commands, has_web)
         ///
         /// - Parameters:
         ///   - request: A `Pinix_V1_GetInfoRequest` message.
@@ -1573,14 +1766,14 @@ extension Pinix_V1_ClipService {
     ///
     /// > Source IDL Documentation:
     /// >
-    /// > ─── ClipService ───────────────────────────────────────────────
-    /// > Clip Token 持有者使用，权限绑定特定 workdir
+    /// > ─── ClipService ──────────────────────────────────────────────
+    /// > Clip Token holders. Scoped to a single clip's workdir.
     internal protocol ClientProtocol: Sendable {
         /// Call the "Invoke" method.
         ///
         /// > Source IDL Documentation:
         /// >
-        /// > 执行 commands/ 下的可执行文件（streaming stdout/stderr）
+        /// > Execute a command script under commands/ (streaming stdout/stderr)
         ///
         /// - Parameters:
         ///   - request: A request containing a single `Pinix_V1_InvokeRequest` message.
@@ -1603,7 +1796,7 @@ extension Pinix_V1_ClipService {
         ///
         /// > Source IDL Documentation:
         /// >
-        /// > 流式读取 workdir 下的文件
+        /// > Stream-read a file under web/ or data/
         ///
         /// - Parameters:
         ///   - request: A request containing a single `Pinix_V1_ReadFileRequest` message.
@@ -1626,7 +1819,7 @@ extension Pinix_V1_ClipService {
         ///
         /// > Source IDL Documentation:
         /// >
-        /// > 返回 Clip 元信息
+        /// > Return clip metadata (name, description, commands, has_web)
         ///
         /// - Parameters:
         ///   - request: A request containing a single `Pinix_V1_GetInfoRequest` message.
@@ -1654,8 +1847,8 @@ extension Pinix_V1_ClipService {
     ///
     /// > Source IDL Documentation:
     /// >
-    /// > ─── ClipService ───────────────────────────────────────────────
-    /// > Clip Token 持有者使用，权限绑定特定 workdir
+    /// > ─── ClipService ──────────────────────────────────────────────
+    /// > Clip Token holders. Scoped to a single clip's workdir.
     internal struct Client<Transport>: ClientProtocol where Transport: GRPCCore.ClientTransport {
         private let client: GRPCCore.GRPCClient<Transport>
 
@@ -1671,7 +1864,7 @@ extension Pinix_V1_ClipService {
         ///
         /// > Source IDL Documentation:
         /// >
-        /// > 执行 commands/ 下的可执行文件（streaming stdout/stderr）
+        /// > Execute a command script under commands/ (streaming stdout/stderr)
         ///
         /// - Parameters:
         ///   - request: A request containing a single `Pinix_V1_InvokeRequest` message.
@@ -1703,7 +1896,7 @@ extension Pinix_V1_ClipService {
         ///
         /// > Source IDL Documentation:
         /// >
-        /// > 流式读取 workdir 下的文件
+        /// > Stream-read a file under web/ or data/
         ///
         /// - Parameters:
         ///   - request: A request containing a single `Pinix_V1_ReadFileRequest` message.
@@ -1735,7 +1928,7 @@ extension Pinix_V1_ClipService {
         ///
         /// > Source IDL Documentation:
         /// >
-        /// > 返回 Clip 元信息
+        /// > Return clip metadata (name, description, commands, has_web)
         ///
         /// - Parameters:
         ///   - request: A request containing a single `Pinix_V1_GetInfoRequest` message.
@@ -1774,7 +1967,7 @@ extension Pinix_V1_ClipService.ClientProtocol {
     ///
     /// > Source IDL Documentation:
     /// >
-    /// > 执行 commands/ 下的可执行文件（streaming stdout/stderr）
+    /// > Execute a command script under commands/ (streaming stdout/stderr)
     ///
     /// - Parameters:
     ///   - request: A request containing a single `Pinix_V1_InvokeRequest` message.
@@ -1801,7 +1994,7 @@ extension Pinix_V1_ClipService.ClientProtocol {
     ///
     /// > Source IDL Documentation:
     /// >
-    /// > 流式读取 workdir 下的文件
+    /// > Stream-read a file under web/ or data/
     ///
     /// - Parameters:
     ///   - request: A request containing a single `Pinix_V1_ReadFileRequest` message.
@@ -1828,7 +2021,7 @@ extension Pinix_V1_ClipService.ClientProtocol {
     ///
     /// > Source IDL Documentation:
     /// >
-    /// > 返回 Clip 元信息
+    /// > Return clip metadata (name, description, commands, has_web)
     ///
     /// - Parameters:
     ///   - request: A request containing a single `Pinix_V1_GetInfoRequest` message.
@@ -1861,7 +2054,7 @@ extension Pinix_V1_ClipService.ClientProtocol {
     ///
     /// > Source IDL Documentation:
     /// >
-    /// > 执行 commands/ 下的可执行文件（streaming stdout/stderr）
+    /// > Execute a command script under commands/ (streaming stdout/stderr)
     ///
     /// - Parameters:
     ///   - message: request message to send.
@@ -1892,7 +2085,7 @@ extension Pinix_V1_ClipService.ClientProtocol {
     ///
     /// > Source IDL Documentation:
     /// >
-    /// > 流式读取 workdir 下的文件
+    /// > Stream-read a file under web/ or data/
     ///
     /// - Parameters:
     ///   - message: request message to send.
@@ -1923,7 +2116,7 @@ extension Pinix_V1_ClipService.ClientProtocol {
     ///
     /// > Source IDL Documentation:
     /// >
-    /// > 返回 Clip 元信息
+    /// > Return clip metadata (name, description, commands, has_web)
     ///
     /// - Parameters:
     ///   - message: request message to send.

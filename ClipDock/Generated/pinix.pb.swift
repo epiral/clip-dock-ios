@@ -62,14 +62,14 @@ struct Pinix_V1_ListClipsResponse: Sendable {
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  var clips: [Pinix_V1_Clip] = []
+  var clips: [Pinix_V1_ClipInfo] = []
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
 }
 
-struct Pinix_V1_Clip: Sendable {
+struct Pinix_V1_ClipInfo: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -78,7 +78,11 @@ struct Pinix_V1_Clip: Sendable {
 
   var name: String = String()
 
-  var workdir: String = String()
+  var desc: String = String()
+
+  var commands: [String] = []
+
+  var hasWeb_p: Bool = false
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -112,6 +116,7 @@ struct Pinix_V1_GenerateTokenRequest: Sendable {
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
+  /// required — cannot generate Super Token via API
   var clipID: String = String()
 
   var label: String = String()
@@ -126,7 +131,53 @@ struct Pinix_V1_GenerateTokenResponse: Sendable {
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
+  var id: String = String()
+
   var token: String = String()
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
+struct Pinix_V1_ListTokensRequest: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
+struct Pinix_V1_ListTokensResponse: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var tokens: [Pinix_V1_TokenInfo] = []
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
+struct Pinix_V1_TokenInfo: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var id: String = String()
+
+  var clipID: String = String()
+
+  var label: String = String()
+
+  /// RFC 3339
+  var createdAt: String = String()
+
+  /// last 4 chars of token
+  var hint: String = String()
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -138,7 +189,8 @@ struct Pinix_V1_RevokeTokenRequest: Sendable {
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  var token: String = String()
+  /// revoke by token id, not token value
+  var id: String = String()
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -192,13 +244,84 @@ struct Pinix_V1_InvokeChunk: Sendable {
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  var payload: OneOf_Payload? = nil
+  var payload: Pinix_V1_InvokeChunk.OneOf_Payload? = nil
+
+  var stdout: Data {
+    get {
+      if case .stdout(let v)? = payload {return v}
+      return Data()
+    }
+    set {payload = .stdout(newValue)}
+  }
+
+  var stderr: Data {
+    get {
+      if case .stderr(let v)? = payload {return v}
+      return Data()
+    }
+    set {payload = .stderr(newValue)}
+  }
+
+  /// final chunk — signals command completion
+  var exitCode: Int32 {
+    get {
+      if case .exitCode(let v)? = payload {return v}
+      return 0
+    }
+    set {payload = .exitCode(newValue)}
+  }
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
 
   enum OneOf_Payload: Equatable, Sendable {
     case stdout(Data)
     case stderr(Data)
+    /// final chunk — signals command completion
     case exitCode(Int32)
+
   }
+
+  init() {}
+}
+
+struct Pinix_V1_ReadFileRequest: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  /// relative to workdir: "web/index.html", "data/voice.mp3"
+  var path: String = String()
+
+  /// byte offset, 0 = from start
+  var offset: Int64 = 0
+
+  /// requested bytes, 0 = to end
+  var length: Int64 = 0
+
+  /// client-held ETag
+  var ifNoneMatch: String = String()
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
+struct Pinix_V1_ReadFileChunk: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var data: Data = Data()
+
+  var offset: Int64 = 0
+
+  var mimeType: String = String()
+
+  var totalSize: Int64 = 0
+
+  var etag: String = String()
+
+  var notModified: Bool = false
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -226,57 +349,7 @@ struct Pinix_V1_GetInfoResponse: Sendable {
 
   var commands: [String] = []
 
-  var hasWeb: Bool = false
-
-  var unknownFields = SwiftProtobuf.UnknownStorage()
-
-  init() {}
-}
-
-struct Pinix_V1_ReadFileRequest: Sendable {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
-
-  /// 相对 workdir: "web/index.html", "data/voice.mp3"
-  var path: String = String()
-
-  /// 字节偏移，0 = 从头
-  var offset: Int64 = 0
-
-  /// 请求字节数，0 = 到末尾
-  var length: Int64 = 0
-
-  /// 客户端持有的 ETag
-  var ifNoneMatch: String = String()
-
-  var unknownFields = SwiftProtobuf.UnknownStorage()
-
-  init() {}
-}
-
-struct Pinix_V1_ReadFileChunk: Sendable {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
-
-  /// 本 chunk 数据
-  var data: Data = Data()
-
-  /// 本 chunk 在文件中的起始偏移
-  var offset: Int64 = 0
-
-  /// 每个 chunk 都携带（Go 服务端用 mime.TypeByExtension 推断）
-  var mimeType: String = String()
-
-  /// 文件总大小，每个 chunk 都携带
-  var totalSize: Int64 = 0
-
-  /// 文件当前 ETag
-  var etag: String = String()
-
-  /// true = 内容未变，客户端用本地缓存
-  var notModified: Bool = false
+  var hasWeb_p: Bool = false
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -401,9 +474,9 @@ extension Pinix_V1_ListClipsResponse: SwiftProtobuf.Message, SwiftProtobuf._Mess
   }
 }
 
-extension Pinix_V1_Clip: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".Clip"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}clip_id\0\u{1}name\0\u{1}workdir\0")
+extension Pinix_V1_ClipInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".ClipInfo"
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}clip_id\0\u{1}name\0\u{1}desc\0\u{1}commands\0\u{3}has_web\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -413,7 +486,9 @@ extension Pinix_V1_Clip: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularStringField(value: &self.clipID) }()
       case 2: try { try decoder.decodeSingularStringField(value: &self.name) }()
-      case 3: try { try decoder.decodeSingularStringField(value: &self.workdir) }()
+      case 3: try { try decoder.decodeSingularStringField(value: &self.desc) }()
+      case 4: try { try decoder.decodeRepeatedStringField(value: &self.commands) }()
+      case 5: try { try decoder.decodeSingularBoolField(value: &self.hasWeb_p) }()
       default: break
       }
     }
@@ -426,16 +501,24 @@ extension Pinix_V1_Clip: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
     if !self.name.isEmpty {
       try visitor.visitSingularStringField(value: self.name, fieldNumber: 2)
     }
-    if !self.workdir.isEmpty {
-      try visitor.visitSingularStringField(value: self.workdir, fieldNumber: 3)
+    if !self.desc.isEmpty {
+      try visitor.visitSingularStringField(value: self.desc, fieldNumber: 3)
+    }
+    if !self.commands.isEmpty {
+      try visitor.visitRepeatedStringField(value: self.commands, fieldNumber: 4)
+    }
+    if self.hasWeb_p != false {
+      try visitor.visitSingularBoolField(value: self.hasWeb_p, fieldNumber: 5)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: Pinix_V1_Clip, rhs: Pinix_V1_Clip) -> Bool {
+  static func ==(lhs: Pinix_V1_ClipInfo, rhs: Pinix_V1_ClipInfo) -> Bool {
     if lhs.clipID != rhs.clipID {return false}
     if lhs.name != rhs.name {return false}
-    if lhs.workdir != rhs.workdir {return false}
+    if lhs.desc != rhs.desc {return false}
+    if lhs.commands != rhs.commands {return false}
+    if lhs.hasWeb_p != rhs.hasWeb_p {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -527,7 +610,7 @@ extension Pinix_V1_GenerateTokenRequest: SwiftProtobuf.Message, SwiftProtobuf._M
 
 extension Pinix_V1_GenerateTokenResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".GenerateTokenResponse"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}token\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}id\0\u{1}token\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -535,21 +618,125 @@ extension Pinix_V1_GenerateTokenResponse: SwiftProtobuf.Message, SwiftProtobuf._
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeSingularStringField(value: &self.token) }()
+      case 1: try { try decoder.decodeSingularStringField(value: &self.id) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.token) }()
       default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.id.isEmpty {
+      try visitor.visitSingularStringField(value: self.id, fieldNumber: 1)
+    }
     if !self.token.isEmpty {
-      try visitor.visitSingularStringField(value: self.token, fieldNumber: 1)
+      try visitor.visitSingularStringField(value: self.token, fieldNumber: 2)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: Pinix_V1_GenerateTokenResponse, rhs: Pinix_V1_GenerateTokenResponse) -> Bool {
+    if lhs.id != rhs.id {return false}
     if lhs.token != rhs.token {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Pinix_V1_ListTokensRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".ListTokensRequest"
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    // Load everything into unknown fields
+    while try decoder.nextFieldNumber() != nil {}
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Pinix_V1_ListTokensRequest, rhs: Pinix_V1_ListTokensRequest) -> Bool {
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Pinix_V1_ListTokensResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".ListTokensResponse"
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}tokens\0")
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeRepeatedMessageField(value: &self.tokens) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.tokens.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.tokens, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Pinix_V1_ListTokensResponse, rhs: Pinix_V1_ListTokensResponse) -> Bool {
+    if lhs.tokens != rhs.tokens {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Pinix_V1_TokenInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".TokenInfo"
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}id\0\u{3}clip_id\0\u{1}label\0\u{3}created_at\0\u{1}hint\0")
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularStringField(value: &self.id) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.clipID) }()
+      case 3: try { try decoder.decodeSingularStringField(value: &self.label) }()
+      case 4: try { try decoder.decodeSingularStringField(value: &self.createdAt) }()
+      case 5: try { try decoder.decodeSingularStringField(value: &self.hint) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.id.isEmpty {
+      try visitor.visitSingularStringField(value: self.id, fieldNumber: 1)
+    }
+    if !self.clipID.isEmpty {
+      try visitor.visitSingularStringField(value: self.clipID, fieldNumber: 2)
+    }
+    if !self.label.isEmpty {
+      try visitor.visitSingularStringField(value: self.label, fieldNumber: 3)
+    }
+    if !self.createdAt.isEmpty {
+      try visitor.visitSingularStringField(value: self.createdAt, fieldNumber: 4)
+    }
+    if !self.hint.isEmpty {
+      try visitor.visitSingularStringField(value: self.hint, fieldNumber: 5)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Pinix_V1_TokenInfo, rhs: Pinix_V1_TokenInfo) -> Bool {
+    if lhs.id != rhs.id {return false}
+    if lhs.clipID != rhs.clipID {return false}
+    if lhs.label != rhs.label {return false}
+    if lhs.createdAt != rhs.createdAt {return false}
+    if lhs.hint != rhs.hint {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -557,7 +744,7 @@ extension Pinix_V1_GenerateTokenResponse: SwiftProtobuf.Message, SwiftProtobuf._
 
 extension Pinix_V1_RevokeTokenRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".RevokeTokenRequest"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}token\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}id\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -565,21 +752,21 @@ extension Pinix_V1_RevokeTokenRequest: SwiftProtobuf.Message, SwiftProtobuf._Mes
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeSingularStringField(value: &self.token) }()
+      case 1: try { try decoder.decodeSingularStringField(value: &self.id) }()
       default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.token.isEmpty {
-      try visitor.visitSingularStringField(value: self.token, fieldNumber: 1)
+    if !self.id.isEmpty {
+      try visitor.visitSingularStringField(value: self.id, fieldNumber: 1)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: Pinix_V1_RevokeTokenRequest, rhs: Pinix_V1_RevokeTokenRequest) -> Bool {
-    if lhs.token != rhs.token {return false}
+    if lhs.id != rhs.id {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -690,12 +877,15 @@ extension Pinix_V1_InvokeChunk: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try {
         var v: Data?
         try decoder.decodeSingularBytesField(value: &v)
         if let v = v {
-          if self.payload != nil { try decoder.handleConflictingOneOf() }
+          if self.payload != nil {try decoder.handleConflictingOneOf()}
           self.payload = .stdout(v)
         }
       }()
@@ -703,7 +893,7 @@ extension Pinix_V1_InvokeChunk: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
         var v: Data?
         try decoder.decodeSingularBytesField(value: &v)
         if let v = v {
-          if self.payload != nil { try decoder.handleConflictingOneOf() }
+          if self.payload != nil {try decoder.handleConflictingOneOf()}
           self.payload = .stderr(v)
         }
       }()
@@ -711,7 +901,7 @@ extension Pinix_V1_InvokeChunk: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
         var v: Int32?
         try decoder.decodeSingularInt32Field(value: &v)
         if let v = v {
-          if self.payload != nil { try decoder.handleConflictingOneOf() }
+          if self.payload != nil {try decoder.handleConflictingOneOf()}
           self.payload = .exitCode(v)
         }
       }()
@@ -721,13 +911,23 @@ extension Pinix_V1_InvokeChunk: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     switch self.payload {
-    case .stdout(let v)?:
+    case .stdout?: try {
+      guard case .stdout(let v)? = self.payload else { preconditionFailure() }
       try visitor.visitSingularBytesField(value: v, fieldNumber: 1)
-    case .stderr(let v)?:
+    }()
+    case .stderr?: try {
+      guard case .stderr(let v)? = self.payload else { preconditionFailure() }
       try visitor.visitSingularBytesField(value: v, fieldNumber: 2)
-    case .exitCode(let v)?:
+    }()
+    case .exitCode?: try {
+      guard case .exitCode(let v)? = self.payload else { preconditionFailure() }
       try visitor.visitSingularInt32Field(value: v, fieldNumber: 3)
+    }()
     case nil: break
     }
     try unknownFields.traverse(visitor: &visitor)
@@ -845,6 +1045,7 @@ extension Pinix_V1_GetInfoRequest: SwiftProtobuf.Message, SwiftProtobuf._Message
   static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    // Load everything into unknown fields
     while try decoder.nextFieldNumber() != nil {}
   }
 
@@ -860,15 +1061,18 @@ extension Pinix_V1_GetInfoRequest: SwiftProtobuf.Message, SwiftProtobuf._Message
 
 extension Pinix_V1_GetInfoResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".GetInfoResponse"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}name\0\u{3}description\0\u{1}commands\0\u{3}has_web\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}name\0\u{1}description\0\u{1}commands\0\u{3}has_web\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularStringField(value: &self.name) }()
       case 2: try { try decoder.decodeSingularStringField(value: &self.description_p) }()
       case 3: try { try decoder.decodeRepeatedStringField(value: &self.commands) }()
-      case 4: try { try decoder.decodeSingularBoolField(value: &self.hasWeb) }()
+      case 4: try { try decoder.decodeSingularBoolField(value: &self.hasWeb_p) }()
       default: break
       }
     }
@@ -884,8 +1088,8 @@ extension Pinix_V1_GetInfoResponse: SwiftProtobuf.Message, SwiftProtobuf._Messag
     if !self.commands.isEmpty {
       try visitor.visitRepeatedStringField(value: self.commands, fieldNumber: 3)
     }
-    if self.hasWeb != false {
-      try visitor.visitSingularBoolField(value: self.hasWeb, fieldNumber: 4)
+    if self.hasWeb_p != false {
+      try visitor.visitSingularBoolField(value: self.hasWeb_p, fieldNumber: 4)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -894,7 +1098,7 @@ extension Pinix_V1_GetInfoResponse: SwiftProtobuf.Message, SwiftProtobuf._Messag
     if lhs.name != rhs.name {return false}
     if lhs.description_p != rhs.description_p {return false}
     if lhs.commands != rhs.commands {return false}
-    if lhs.hasWeb != rhs.hasWeb {return false}
+    if lhs.hasWeb_p != rhs.hasWeb_p {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
