@@ -48,6 +48,15 @@ targets:
         INFOPLIST_KEY_NSMicrophoneUsageDescription: "Clip 需要访问麦克风以录制音频"
         INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "Clip 需要访问位置以获取当前坐标"
         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "Clip 需要访问相册以选择图片"
+        INFOPLIST_KEY_NSContactsUsageDescription: "Clip 需要访问通讯录以查询联系人"
+        INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription: "Clip 需要访问日历以读写日程"
+        INFOPLIST_KEY_NSHealthShareUsageDescription: "Clip 需要读取健康数据（步数、心率、睡眠等）"
+    entitlements:
+      path: ClipDock/ClipDock.entitlements
+      properties:
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.access:
+          - health-records
     dependencies:
       - package: grpc-swift-2
         product: GRPCCore

@@ -10,6 +10,8 @@ struct ClipListView: View {
     @State private var showImportSheet = false
     @State private var importJSON = ""
     @State private var importAlert: ImportAlertItem?
+    @State private var showEdgeSettings = false
+    @Environment(\.edgeModule) private var edgeModule
 
     var body: some View {
         List {
@@ -61,10 +63,17 @@ struct ClipListView: View {
                 }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    showAddSheet = true
-                } label: {
-                    Image(systemName: "plus")
+                HStack(spacing: 16) {
+                    Button {
+                        showEdgeSettings = true
+                    } label: {
+                        Image(systemName: "antenna.radiowaves.left.and.right")
+                    }
+                    Button {
+                        showAddSheet = true
+                    } label: {
+                        Image(systemName: "plus")
+                    }
                 }
             }
         }
@@ -78,6 +87,9 @@ struct ClipListView: View {
             ImportJSONView(jsonText: $importJSON) { text in
                 doImport(text)
             }
+        }
+        .sheet(isPresented: $showEdgeSettings) {
+            EdgeSettingsView(edgeModule: edgeModule)
         }
         .alert(item: $importAlert) { item in
             Alert(title: Text(item.title), message: Text(item.message), dismissButton: .default(Text("好")))

@@ -12,6 +12,9 @@
 //   Bridge.invoke("ios.speakingStart", { apiKey, topic? })   → SpeakingSessionHandler
 //   Bridge.invoke("ios.speakingStop")                        → SpeakingSessionHandler
 //   Bridge.invoke("ios.speakingStatus")                      → SpeakingSessionHandler
+//   Bridge.invoke("ios.contactsList", { query?, limit? })    → IOSSystemBridgeHandler
+//   Bridge.invoke("ios.calendarList", { from, to, limit? })  → IOSSystemBridgeHandler
+//   Bridge.invoke("ios.calendarCreate", { title, startDate, endDate, ... }) → IOSSystemBridgeHandler
 //
 // 命名规约：
 //   "invoke"        — 通用 Pinix RPC 入口（累积），无平台前缀
@@ -134,7 +137,8 @@ final class JSBridge: NSObject, WKScriptMessageHandlerWithReply {
         'ios.clipboardRead', 'ios.clipboardWrite', 'ios.haptic', 'ios.openURL', 'ios.share',
         'ios.locationGet', 'ios.cameraCapture', 'ios.microphoneRecord',
         'ios.healthQuery', 'ios.healthCorrelation',
-        'ios.speakingStart', 'ios.speakingStop', 'ios.speakingStatus'
+        'ios.speakingStart', 'ios.speakingStop', 'ios.speakingStatus',
+        'ios.contactsList', 'ios.calendarList', 'ios.calendarCreate'
     ]);
     window.Bridge = {
         async invoke(command, payload) {

@@ -2145,3 +2145,356 @@ extension Pinix_V1_ClipService.ClientProtocol {
         )
     }
 }
+
+// MARK: - pinix.v1.EdgeService
+
+/// Namespace containing generated types for the "pinix.v1.EdgeService" service.
+@available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
+internal enum Pinix_V1_EdgeService: Sendable {
+    /// Service descriptor for the "pinix.v1.EdgeService" service.
+    internal static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "pinix.v1.EdgeService")
+    /// Namespace for method metadata.
+    internal enum Method: Sendable {
+        /// Namespace for "Connect" metadata.
+        internal enum Connect: Sendable {
+            /// Request type for "Connect".
+            internal typealias Input = Pinix_V1_EdgeUpstream
+            /// Response type for "Connect".
+            internal typealias Output = Pinix_V1_EdgeDownstream
+            /// Descriptor for "Connect".
+            internal static let descriptor = GRPCCore.MethodDescriptor(
+                service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "pinix.v1.EdgeService"),
+                method: "Connect"
+            )
+        }
+        /// Descriptors for all methods in the "pinix.v1.EdgeService" service.
+        internal static let descriptors: [GRPCCore.MethodDescriptor] = [
+            Connect.descriptor
+        ]
+    }
+}
+
+@available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
+extension GRPCCore.ServiceDescriptor {
+    /// Service descriptor for the "pinix.v1.EdgeService" service.
+    internal static let pinix_v1_EdgeService = GRPCCore.ServiceDescriptor(fullyQualifiedService: "pinix.v1.EdgeService")
+}
+
+// MARK: pinix.v1.EdgeService (server)
+
+@available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
+extension Pinix_V1_EdgeService {
+    /// Streaming variant of the service protocol for the "pinix.v1.EdgeService" service.
+    ///
+    /// This protocol is the lowest-level of the service protocols generated for this service
+    /// giving you the most flexibility over the implementation of your service. This comes at
+    /// the cost of more verbose and less strict APIs. Each RPC requires you to implement it in
+    /// terms of a request stream and response stream. Where only a single request or response
+    /// message is expected, you are responsible for enforcing this invariant is maintained.
+    ///
+    /// Where possible, prefer using the stricter, less-verbose ``ServiceProtocol``
+    /// or ``SimpleServiceProtocol`` instead.
+    ///
+    /// > Source IDL Documentation:
+    /// >
+    /// > ─── EdgeService ─────────────────────────────────────────────
+    /// > Devices connect via bidirectional stream to expose native capabilities
+    /// > as Edge Clips. Requires Super Token authentication.
+    internal protocol StreamingServiceProtocol: GRPCCore.RegistrableRPCService {
+        /// Handle the "Connect" method.
+        ///
+        /// > Source IDL Documentation:
+        /// >
+        /// > Device connects and registers its capabilities.
+        /// > Server forwards Invoke/ReadFile/GetInfo requests through this stream.
+        ///
+        /// - Parameters:
+        ///   - request: A streaming request of `Pinix_V1_EdgeUpstream` messages.
+        ///   - context: Context providing information about the RPC.
+        /// - Throws: Any error which occurred during the processing of the request. Thrown errors
+        ///     of type `RPCError` are mapped to appropriate statuses. All other errors are converted
+        ///     to an internal error.
+        /// - Returns: A streaming response of `Pinix_V1_EdgeDownstream` messages.
+        func connect(
+            request: GRPCCore.StreamingServerRequest<Pinix_V1_EdgeUpstream>,
+            context: GRPCCore.ServerContext
+        ) async throws -> GRPCCore.StreamingServerResponse<Pinix_V1_EdgeDownstream>
+    }
+
+    /// Service protocol for the "pinix.v1.EdgeService" service.
+    ///
+    /// This protocol is higher level than ``StreamingServiceProtocol`` but lower level than
+    /// the ``SimpleServiceProtocol``, it provides access to request and response metadata and
+    /// trailing response metadata. If you don't need these then consider using
+    /// the ``SimpleServiceProtocol``. If you need fine grained control over your RPCs then
+    /// use ``StreamingServiceProtocol``.
+    ///
+    /// > Source IDL Documentation:
+    /// >
+    /// > ─── EdgeService ─────────────────────────────────────────────
+    /// > Devices connect via bidirectional stream to expose native capabilities
+    /// > as Edge Clips. Requires Super Token authentication.
+    internal protocol ServiceProtocol: Pinix_V1_EdgeService.StreamingServiceProtocol {
+        /// Handle the "Connect" method.
+        ///
+        /// > Source IDL Documentation:
+        /// >
+        /// > Device connects and registers its capabilities.
+        /// > Server forwards Invoke/ReadFile/GetInfo requests through this stream.
+        ///
+        /// - Parameters:
+        ///   - request: A streaming request of `Pinix_V1_EdgeUpstream` messages.
+        ///   - context: Context providing information about the RPC.
+        /// - Throws: Any error which occurred during the processing of the request. Thrown errors
+        ///     of type `RPCError` are mapped to appropriate statuses. All other errors are converted
+        ///     to an internal error.
+        /// - Returns: A streaming response of `Pinix_V1_EdgeDownstream` messages.
+        func connect(
+            request: GRPCCore.StreamingServerRequest<Pinix_V1_EdgeUpstream>,
+            context: GRPCCore.ServerContext
+        ) async throws -> GRPCCore.StreamingServerResponse<Pinix_V1_EdgeDownstream>
+    }
+
+    /// Simple service protocol for the "pinix.v1.EdgeService" service.
+    ///
+    /// This is the highest level protocol for the service. The API is the easiest to use but
+    /// doesn't provide access to request or response metadata. If you need access to these
+    /// then use ``ServiceProtocol`` instead.
+    ///
+    /// > Source IDL Documentation:
+    /// >
+    /// > ─── EdgeService ─────────────────────────────────────────────
+    /// > Devices connect via bidirectional stream to expose native capabilities
+    /// > as Edge Clips. Requires Super Token authentication.
+    internal protocol SimpleServiceProtocol: Pinix_V1_EdgeService.ServiceProtocol {
+        /// Handle the "Connect" method.
+        ///
+        /// > Source IDL Documentation:
+        /// >
+        /// > Device connects and registers its capabilities.
+        /// > Server forwards Invoke/ReadFile/GetInfo requests through this stream.
+        ///
+        /// - Parameters:
+        ///   - request: A stream of `Pinix_V1_EdgeUpstream` messages.
+        ///   - response: A response stream of `Pinix_V1_EdgeDownstream` messages.
+        ///   - context: Context providing information about the RPC.
+        /// - Throws: Any error which occurred during the processing of the request. Thrown errors
+        ///     of type `RPCError` are mapped to appropriate statuses. All other errors are converted
+        ///     to an internal error.
+        func connect(
+            request: GRPCCore.RPCAsyncSequence<Pinix_V1_EdgeUpstream, any Swift.Error>,
+            response: GRPCCore.RPCWriter<Pinix_V1_EdgeDownstream>,
+            context: GRPCCore.ServerContext
+        ) async throws
+    }
+}
+
+// Default implementation of 'registerMethods(with:)'.
+@available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
+extension Pinix_V1_EdgeService.StreamingServiceProtocol {
+    internal func registerMethods<Transport>(with router: inout GRPCCore.RPCRouter<Transport>) where Transport: GRPCCore.ServerTransport {
+        router.registerHandler(
+            forMethod: Pinix_V1_EdgeService.Method.Connect.descriptor,
+            deserializer: GRPCProtobuf.ProtobufDeserializer<Pinix_V1_EdgeUpstream>(),
+            serializer: GRPCProtobuf.ProtobufSerializer<Pinix_V1_EdgeDownstream>(),
+            handler: { request, context in
+                try await self.connect(
+                    request: request,
+                    context: context
+                )
+            }
+        )
+    }
+}
+
+// Default implementation of streaming methods from 'StreamingServiceProtocol'.
+@available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
+extension Pinix_V1_EdgeService.ServiceProtocol {
+}
+
+// Default implementation of methods from 'ServiceProtocol'.
+@available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
+extension Pinix_V1_EdgeService.SimpleServiceProtocol {
+    internal func connect(
+        request: GRPCCore.StreamingServerRequest<Pinix_V1_EdgeUpstream>,
+        context: GRPCCore.ServerContext
+    ) async throws -> GRPCCore.StreamingServerResponse<Pinix_V1_EdgeDownstream> {
+        return GRPCCore.StreamingServerResponse<Pinix_V1_EdgeDownstream>(
+            metadata: [:],
+            producer: { writer in
+                try await self.connect(
+                    request: request.messages,
+                    response: writer,
+                    context: context
+                )
+                return [:]
+            }
+        )
+    }
+}
+
+// MARK: pinix.v1.EdgeService (client)
+
+@available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
+extension Pinix_V1_EdgeService {
+    /// Generated client protocol for the "pinix.v1.EdgeService" service.
+    ///
+    /// You don't need to implement this protocol directly, use the generated
+    /// implementation, ``Client``.
+    ///
+    /// > Source IDL Documentation:
+    /// >
+    /// > ─── EdgeService ─────────────────────────────────────────────
+    /// > Devices connect via bidirectional stream to expose native capabilities
+    /// > as Edge Clips. Requires Super Token authentication.
+    internal protocol ClientProtocol: Sendable {
+        /// Call the "Connect" method.
+        ///
+        /// > Source IDL Documentation:
+        /// >
+        /// > Device connects and registers its capabilities.
+        /// > Server forwards Invoke/ReadFile/GetInfo requests through this stream.
+        ///
+        /// - Parameters:
+        ///   - request: A streaming request producing `Pinix_V1_EdgeUpstream` messages.
+        ///   - serializer: A serializer for `Pinix_V1_EdgeUpstream` messages.
+        ///   - deserializer: A deserializer for `Pinix_V1_EdgeDownstream` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        func connect<Result>(
+            request: GRPCCore.StreamingClientRequest<Pinix_V1_EdgeUpstream>,
+            serializer: some GRPCCore.MessageSerializer<Pinix_V1_EdgeUpstream>,
+            deserializer: some GRPCCore.MessageDeserializer<Pinix_V1_EdgeDownstream>,
+            options: GRPCCore.CallOptions,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.StreamingClientResponse<Pinix_V1_EdgeDownstream>) async throws -> Result
+        ) async throws -> Result where Result: Sendable
+    }
+
+    /// Generated client for the "pinix.v1.EdgeService" service.
+    ///
+    /// The ``Client`` provides an implementation of ``ClientProtocol`` which wraps
+    /// a `GRPCCore.GRPCCClient`. The underlying `GRPCClient` provides the long-lived
+    /// means of communication with the remote peer.
+    ///
+    /// > Source IDL Documentation:
+    /// >
+    /// > ─── EdgeService ─────────────────────────────────────────────
+    /// > Devices connect via bidirectional stream to expose native capabilities
+    /// > as Edge Clips. Requires Super Token authentication.
+    internal struct Client<Transport>: ClientProtocol where Transport: GRPCCore.ClientTransport {
+        private let client: GRPCCore.GRPCClient<Transport>
+
+        /// Creates a new client wrapping the provided `GRPCCore.GRPCClient`.
+        ///
+        /// - Parameters:
+        ///   - client: A `GRPCCore.GRPCClient` providing a communication channel to the service.
+        internal init(wrapping client: GRPCCore.GRPCClient<Transport>) {
+            self.client = client
+        }
+
+        /// Call the "Connect" method.
+        ///
+        /// > Source IDL Documentation:
+        /// >
+        /// > Device connects and registers its capabilities.
+        /// > Server forwards Invoke/ReadFile/GetInfo requests through this stream.
+        ///
+        /// - Parameters:
+        ///   - request: A streaming request producing `Pinix_V1_EdgeUpstream` messages.
+        ///   - serializer: A serializer for `Pinix_V1_EdgeUpstream` messages.
+        ///   - deserializer: A deserializer for `Pinix_V1_EdgeDownstream` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        internal func connect<Result>(
+            request: GRPCCore.StreamingClientRequest<Pinix_V1_EdgeUpstream>,
+            serializer: some GRPCCore.MessageSerializer<Pinix_V1_EdgeUpstream>,
+            deserializer: some GRPCCore.MessageDeserializer<Pinix_V1_EdgeDownstream>,
+            options: GRPCCore.CallOptions = .defaults,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.StreamingClientResponse<Pinix_V1_EdgeDownstream>) async throws -> Result
+        ) async throws -> Result where Result: Sendable {
+            try await self.client.bidirectionalStreaming(
+                request: request,
+                descriptor: Pinix_V1_EdgeService.Method.Connect.descriptor,
+                serializer: serializer,
+                deserializer: deserializer,
+                options: options,
+                onResponse: handleResponse
+            )
+        }
+    }
+}
+
+// Helpers providing default arguments to 'ClientProtocol' methods.
+@available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
+extension Pinix_V1_EdgeService.ClientProtocol {
+    /// Call the "Connect" method.
+    ///
+    /// > Source IDL Documentation:
+    /// >
+    /// > Device connects and registers its capabilities.
+    /// > Server forwards Invoke/ReadFile/GetInfo requests through this stream.
+    ///
+    /// - Parameters:
+    ///   - request: A streaming request producing `Pinix_V1_EdgeUpstream` messages.
+    ///   - options: Options to apply to this RPC.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func connect<Result>(
+        request: GRPCCore.StreamingClientRequest<Pinix_V1_EdgeUpstream>,
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.StreamingClientResponse<Pinix_V1_EdgeDownstream>) async throws -> Result
+    ) async throws -> Result where Result: Sendable {
+        try await self.connect(
+            request: request,
+            serializer: GRPCProtobuf.ProtobufSerializer<Pinix_V1_EdgeUpstream>(),
+            deserializer: GRPCProtobuf.ProtobufDeserializer<Pinix_V1_EdgeDownstream>(),
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+}
+
+// Helpers providing sugared APIs for 'ClientProtocol' methods.
+@available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
+extension Pinix_V1_EdgeService.ClientProtocol {
+    /// Call the "Connect" method.
+    ///
+    /// > Source IDL Documentation:
+    /// >
+    /// > Device connects and registers its capabilities.
+    /// > Server forwards Invoke/ReadFile/GetInfo requests through this stream.
+    ///
+    /// - Parameters:
+    ///   - metadata: Additional metadata to send, defaults to empty.
+    ///   - options: Options to apply to this RPC, defaults to `.defaults`.
+    ///   - producer: A closure producing request messages to send to the server. The request
+    ///       stream is closed when the closure returns.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func connect<Result>(
+        metadata: GRPCCore.Metadata = [:],
+        options: GRPCCore.CallOptions = .defaults,
+        requestProducer producer: @Sendable @escaping (GRPCCore.RPCWriter<Pinix_V1_EdgeUpstream>) async throws -> Void,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.StreamingClientResponse<Pinix_V1_EdgeDownstream>) async throws -> Result
+    ) async throws -> Result where Result: Sendable {
+        let request = GRPCCore.StreamingClientRequest<Pinix_V1_EdgeUpstream>(
+            metadata: metadata,
+            producer: producer
+        )
+        return try await self.connect(
+            request: request,
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+}

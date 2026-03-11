@@ -9,6 +9,7 @@ struct ClipDockApp: App {
     @State private var path = NavigationPath()
     @State private var fullscreenClip: Bookmark?
     @State private var suppressList = false
+    @State private var edgeModule = EdgeModule()
 
     init() {
         // DEBUG: 清除所有 web 缓存，确保加载最新前端
@@ -30,11 +31,18 @@ struct ClipDockApp: App {
                 }
             }
             .environmentObject(clipsStore)
+            .environment(\.edgeModule, edgeModule)
             .fullScreenCover(item: $fullscreenClip) { clip in
                 ClipView(bookmark: clip, initialFullscreen: true)
             }
             .onOpenURL { url in
                 handleDeepLink(url)
+            }
+            .task {
+                edgeModule.start()
+            }
+            .onDisappear {
+                edgeModule.stop()
             }
         }
     }
