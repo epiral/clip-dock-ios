@@ -226,7 +226,7 @@ final class EdgeModule {
 
         switch request.body {
         case .invoke(let invoke):
-            let (stdout, exitCode) = await router.execute(name: invoke.name, stdin: invoke.stdin)
+            let (stdout, exitCode) = await router.execute(name: invoke.name, args: invoke.args, stdin: invoke.stdin)
 
             var r1 = Pinix_V1_EdgeResponse()
             r1.requestID = rid
