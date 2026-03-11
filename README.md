@@ -1,6 +1,6 @@
 # Clip Dock iOS
 
-The iOS client for [Pinix](https://github.com/epiral/pinix) — use Clips on your iPhone and iPad.
+The iOS client for [Pinix](https://github.com/epiral/pinix) — use Clips on your iPhone, and expose iPhone capabilities as Edge Clips.
 
 [English](README.md) | [中文](README.zh-CN.md)
 
@@ -9,45 +9,77 @@ The iOS client for [Pinix](https://github.com/epiral/pinix) — use Clips on you
 - Connect to any Pinix Server via Bookmarks (URL + Token)
 - Native WKWebView rendering for Clip web UIs
 - Bridge API for Clip ↔ native communication
-- Connect-RPC (gRPC) for Invoke / ReadFile / GetInfo
+- gRPC (grpc-swift-2) for Invoke / ReadFile / GetInfo
 
-## Build
+### Edge Clip
 
-```bash
-# Generate protobuf
-buf generate
+Turn your iPhone into a Pinix Edge device. Other Clips and Agents can invoke iPhone capabilities remotely:
 
-# Open in Xcode
-open ClipDock.xcodeproj
+| Command | Description |
+|---------|-------------|
+| `get-location` | GPS coordinates |
+| `health-query` | HealthKit data (steps, heart rate, sleep, blood oxygen...) |
+| `get-device-info` | Device model, OS version, battery |
+| `send-notification` | Push a local notification |
+| `get-clipboard` | Read clipboard |
+| `set-clipboard` | Write clipboard |
+| `haptic` | Trigger haptic feedback |
+| `list-contacts` | Query address book |
+| `list-events` | List calendar events |
+| `create-event` | Create calendar event |
 
-# Or generate via project.yml (XcodeGen)
-xcodegen generate
-```
+All commands support `--help` for usage details.
 
-## Requirements
+### Setup Edge
 
-- Xcode 16+
-- iOS 17+
-- A running Pinix Server (local or remote)
+1. Open Clip Dock → tap 📡 (antenna icon) → Edge Settings
+2. Enable Edge, enter Pinix Server URL and Super Token
+3. Save → iPhone auto-connects and registers capabilities
+4. From any terminal: `pinix invoke get-location --server <url> --token <token>`
+
+Token is stable across reconnects and server restarts.
 
 ## Architecture
 
 ```
 ┌──────────────────────────────────┐
-│  ClipDock iOS App                 │
-│                                   │
-│  WKWebView                        │
-│  ├─ Loads pinix-web://<clip>/    │
+│  ClipDock iOS App                │
+│                                  │
+│  WKWebView (Clip UI)             │
 │  ├─ Bridge.invoke() → native     │
-│  └─ pinix-data:// for files     │
-│                                   │
-│  Native Layer                     │
-│  ├─ Connect-RPC client           │
-│  ├─ ClipService.Invoke (stream)  │
-│  ├─ ClipService.ReadFile         │
-│  └─ Bookmark management          │
+│  └─ pinix-web/data:// schemes   │
+│                                  │
+│  Capabilities Layer              │
+│  ├─ Location   ├─ Health         │
+│  ├─ Contacts   ├─ Calendar       │
+│  ├─ Clipboard  ├─ Notification   │
+│  ├─ Haptic     └─ DeviceInfo     │
+│                                  │
+│  Edge Module                     │
+│  ├─ EdgeService.Connect (gRPC)   │
+│  ├─ EdgeCommandRouter            │
+│  └─ Auto-reconnect + status UI   │
+│                                  │
+│  Bridge Handlers (thin wrappers) │
+│  └─ JS ↔ Capabilities           │
 └──────────────────────────────────┘
-         │
-         ▼
-   Pinix Server
+         │              │
+    ClipService    EdgeService
+         │              │
+         ▼              ▼
+      Pinix Server (Hub)
 ```
+
+## Build
+
+```bash
+buf generate              # Generate protobuf
+xcodegen generate         # Generate Xcode project
+open ClipDock.xcodeproj   # Open in Xcode
+```
+
+## Requirements
+
+- Xcode 16+
+- iOS 18+
+- A running Pinix Server (local or remote)
