@@ -171,10 +171,15 @@ final class ClipDockBridgeHandler {
                     let clipService = Pinix_V1_ClipService.Client(wrapping: client)
                     try await clipService.invoke(request, metadata: metadata) { response in
                         var doneEmitted = false
+                        var utf8Buffer = Data() // accumulate partial UTF-8 sequences across chunks
                         for try await chunk in response.messages {
                             switch chunk.payload {
                             case .stdout(let data):
-                                let text = String(data: data, encoding: .utf8) ?? ""
+                                utf8Buffer.append(data)
+                                // Decode as much valid UTF-8 as possible, keep trailing incomplete bytes
+                                let (text, remaining) = Self.decodeUTF8Partial(utf8Buffer)
+                                utf8Buffer = remaining
+                                guard !text.isEmpty else { break }
                                 let escaped = Self.escapeForJS(text)
                                 await MainActor.run {
                                     webView?.evaluateJavaScript(
@@ -240,6 +245,50 @@ final class ClipDockBridgeHandler {
             )
         }
         return (hostname, port)
+    }
+
+    /// Decode as much valid UTF-8 as possible from data, returning
+    /// (decoded string, remaining incomplete bytes at the tail).
+    nonisolated static func decodeUTF8Partial(_ data: Data) -> (String, Data) {
+        // Find the last position where we can safely decode.
+        // A trailing incomplete UTF-8 sequence: the last 1-3 bytes might be
+        // the start of a multi-byte character that hasn't fully arrived.
+        var end = data.count
+        if end == 0 { return ("", Data()) }
+
+        // Walk backwards to find a safe cut point
+        // UTF-8 continuation bytes are 10xxxxxx (0x80-0xBF)
+        // We need to find where the last character starts
+        var trailingIncomplete = 0
+        for i in stride(from: end - 1, through: max(0, end - 4), by: -1) {
+            let byte = data[i]
+            if byte & 0x80 == 0 {
+                // ASCII — safe boundary right after this byte
+                break
+            } else if byte & 0xC0 == 0xC0 {
+                // Start of multi-byte sequence
+                let expectedLen: Int
+                if byte & 0xF8 == 0xF0 { expectedLen = 4 }
+                else if byte & 0xF0 == 0xE0 { expectedLen = 3 }
+                else { expectedLen = 2 }
+                let available = end - i
+                if available < expectedLen {
+                    // Incomplete — cut before this byte
+                    trailingIncomplete = available
+                }
+                break
+            }
+            // else: continuation byte, keep going back
+        }
+
+        let safEnd = end - trailingIncomplete
+        if safEnd == 0 {
+            return ("", data)
+        }
+
+        let decoded = String(data: data[0..<safEnd], encoding: .utf8) ?? String(decoding: data[0..<safEnd], as: UTF8.self)
+        let remaining = trailingIncomplete > 0 ? Data(data[safEnd...]) : Data()
+        return (decoded, remaining)
     }
 
     // MARK: - JS 辅助
